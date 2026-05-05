@@ -188,6 +188,14 @@ def get_artifact_content(req: Request, task_id: str, artifact_id: str) -> Artifa
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="artifact_file_not_found")
 
+    # Binary files (video etc.) cannot be returned as JSON content
+    binary_extensions = {".mp4", ".mov", ".avi", ".mp3", ".wav", ".png", ".jpg"}
+    if file_path.suffix.lower() in binary_extensions:
+        return ArtifactContentResponse(
+            artifact_id=artifact.id,
+            content={"note": "binary_file", "storage_ref": str(file_path), "file_size": file_path.stat().st_size},
+        )
+
     content = json.loads(file_path.read_text(encoding="utf-8"))
     return ArtifactContentResponse(
         artifact_id=artifact.id,

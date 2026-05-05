@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import List
 
 from app.src.skills.llm_adapter import LLMAdapter, LLMParseError
@@ -92,7 +93,8 @@ def _parse_findings(raw_response: str) -> List[dict]:
         LLMParseError: If response is not valid JSON or not a list.
     """
     try:
-        data = json.loads(raw_response)
+        cleaned = re.sub(r'^```(?:json)?\s*', '', raw_response.strip()).rstrip('`').strip()
+        data = json.loads(cleaned)
     except (json.JSONDecodeError, ValueError) as exc:
         raise LLMParseError(
             f"Review response is not valid JSON. "

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from app.src.skills.llm_adapter import LLMAdapter, LLMParseError
@@ -88,7 +89,8 @@ def _build_user_prompt(script_draft: dict[str, Any]) -> str:
 def _parse_segments(raw_response: str) -> list[dict[str, Any]]:
     """Parse the raw LLM response into a list of segment dicts."""
     try:
-        data = json.loads(raw_response)
+        cleaned = re.sub(r'^```(?:json)?\s*', '', raw_response.strip()).rstrip('`').strip()
+        data = json.loads(cleaned)
     except (json.JSONDecodeError, ValueError) as exc:
         raise LLMParseError(
             f"Storyboard response is not valid JSON: {exc}. "

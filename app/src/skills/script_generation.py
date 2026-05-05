@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import TYPE_CHECKING
 
 from app.src.skills.llm_adapter import LLMParseError
@@ -76,7 +77,8 @@ def _parse_script_response(raw_text: str) -> dict:
     Raises LLMParseError with the raw response attached if parsing fails.
     """
     try:
-        data = json.loads(raw_text)
+        cleaned = re.sub(r'^```(?:json)?\s*', '', raw_text.strip()).rstrip('`').strip()
+        data = json.loads(cleaned)
     except (json.JSONDecodeError, ValueError) as exc:
         raise LLMParseError(
             f"Script generation produced invalid JSON. Raw response: {raw_text}"
