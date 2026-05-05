@@ -62,3 +62,26 @@ class RetryStepRequest(BaseModel):
 
 class RetryStepResponse(BaseModel):
     accepted: bool
+
+
+class TaskListItemDTO(BaseModel):
+    id: str
+    status: str
+    input_kind: str
+    input_text_summary: str
+    created_at: datetime
+
+
+class TaskListResponse(BaseModel):
+    tasks: list[TaskListItemDTO]
+
+
+class ArtifactContentResponse(BaseModel):
+    artifact_id: str
+    content: Any
+
+
+class UploadMaterialResponse(BaseModel):
+    accepted: bool
+    filename: Optional[str] = None
+    artifact_id: Optional[str] = None

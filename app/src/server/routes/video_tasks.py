@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 
-from app.src.domain.models import ArtifactType, StepStatus
+from app.src.domain.models import ArtifactType, StepStatus, TaskStatus
 from app.src.server.schemas import (
+    ArtifactContentResponse,
     ArtifactDTO,
     ArtifactListResponse,
     CreateVideoTaskRequest,
@@ -15,12 +17,15 @@ from app.src.server.schemas import (
     StepDTO,
     TaskDTO,
     TaskDetailResponse,
+    TaskListItemDTO,
+    TaskListResponse,
+    UploadMaterialResponse,
 )
 
 router = APIRouter(prefix="/api/video-tasks", tags=["video-tasks"])
 
 
-DEFAULT_STEP_KEYS = ["script_generation", "review_script"]
+DEFAULT_STEP_KEYS = ["material_fetch", "script_generation", "storyboard", "review_script"]
 
 
 @router.post("", response_model=CreateVideoTaskResponse)
@@ -48,11 +53,19 @@ def create_video_task(req: Request, body: CreateVideoTaskRequest) -> CreateVideo
         },
     )
 
-    # Run the first step immediately for the first slice to guarantee at least
-    # one reviewable artifact exists for S-001.
+    # Run the pipeline: material_fetch first, then LLM steps if not blocked.
     from app.src.workers.step_runner import StepRunner  # local import to keep server boot minimal
 
-    StepRunner(store=store, artifact_store=artifact_store).run_step(task_id=task.id, step_key="script_generation")
+    store.set_task_status(task.id, TaskStatus.running)
+    runner = StepRunner(store=store, artifact_store=artifact_store)
+    runner.run_step(task_id=task.id, step_key="material_fetch")
+
+    # Check if material_fetch blocked the pipeline
+    task = store.get_task(task.id)
+    if task and task.status != TaskStatus.waiting_for_material:
+        for step_key in ["script_generation", "storyboard", "review_script"]:
+            runner.run_step(task_id=task.id, step_key=step_key)
+
     return CreateVideoTaskResponse(task_id=task.id)
 
 
@@ -129,3 +142,117 @@ def retry_step(req: Request, task_id: str, body: RetryStepRequest) -> RetryStepR
 
     StepRunner(store=store, artifact_store=artifact_store).run_step(task_id=task_id, step_key=body.step_key)
     return RetryStepResponse(accepted=True)
+
+
+@router.get("", response_model=TaskListResponse)
+def list_video_tasks(req: Request) -> TaskListResponse:
+    """Return all tasks ordered by created_at DESC."""
+    store = req.app.state.store
+    tasks = store.list_tasks()
+    items: list[TaskListItemDTO] = []
+    for t in tasks:
+        summary = t.input_text[:80]
+        items.append(
+            TaskListItemDTO(
+                id=t.id,
+                status=t.status.value,
+                input_kind=t.input_kind,
+                input_text_summary=summary,
+                created_at=t.created_at,
+            )
+        )
+    return TaskListResponse(tasks=items)
+
+
+@router.get("/{task_id}/artifacts/{artifact_id}/content", response_model=ArtifactContentResponse)
+def get_artifact_content(req: Request, task_id: str, artifact_id: str) -> ArtifactContentResponse:
+    """Return the JSON content of a specific artifact."""
+    store = req.app.state.store
+    task = store.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="task_not_found")
+
+    artifact = store.get_artifact(task_id, artifact_id)
+    if not artifact:
+        raise HTTPException(status_code=404, detail="artifact_not_found")
+
+    storage_ref = artifact.storage_ref
+    if storage_ref.startswith("db://"):
+        # db:// references store data in metadata
+        return ArtifactContentResponse(
+            artifact_id=artifact.id,
+            content=artifact.metadata,
+        )
+
+    file_path = Path(storage_ref)
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="artifact_file_not_found")
+
+    content = json.loads(file_path.read_text(encoding="utf-8"))
+    return ArtifactContentResponse(
+        artifact_id=artifact.id,
+        content=content,
+    )
+
+
+_ALLOWED_UPLOAD_EXTENSIONS = {".mp4", ".mov", ".avi"}
+_ALLOWED_UPLOAD_CONTENT_TYPES = {"video/mp4", "video/quicktime", "video/x-msvideo"}
+_MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500MB
+
+
+@router.post("/{task_id}/materials", response_model=UploadMaterialResponse)
+async def upload_material(
+    req: Request,
+    task_id: str,
+    file: UploadFile = File(...),
+) -> UploadMaterialResponse:
+    """Upload a video file to replace failed source links."""
+    store = req.app.state.store
+    artifact_store = req.app.state.artifact_store
+
+    task = store.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="task_not_found")
+
+    if task.status != TaskStatus.waiting_for_material:
+        raise HTTPException(status_code=409, detail="task_not_waiting_for_material")
+
+    # Validate extension
+    filename = file.filename or "unknown.mp4"
+    ext = Path(filename).suffix.lower()
+    if ext not in _ALLOWED_UPLOAD_EXTENSIONS:
+        raise HTTPException(status_code=422, detail=f"unsupported_file_extension: {ext}")
+
+    # Read content
+    content = await file.read()
+    if len(content) > _MAX_UPLOAD_SIZE:
+        raise HTTPException(status_code=422, detail="file_too_large")
+
+    # Store file
+    ref = artifact_store.write_file(
+        task_id=task_id,
+        step_key="material_fetch",
+        artifact_type="uploaded_video",
+        filename=filename,
+        content=content,
+    )
+    store.add_artifact(
+        task_id=task_id,
+        step_key="material_fetch",
+        artifact_type=ArtifactType.uploaded_video,
+        storage_ref=ref.storage_ref,
+        metadata={"upload_filename": filename, "file_size": len(content), "content_type": file.content_type},
+    )
+
+    # Mark material_fetch step as completed
+    store.set_step_status(task_id, "material_fetch", StepStatus.completed, progress_percent=100)
+    store.set_task_status(task_id, TaskStatus.running)
+
+    # Resume pipeline
+    from app.src.workers.step_runner import StepRunner
+
+    runner = StepRunner(store=store, artifact_store=artifact_store)
+    for step_key in ["script_generation", "storyboard", "review_script"]:
+        runner.run_step(task_id=task_id, step_key=step_key)
+
+    return UploadMaterialResponse(accepted=True, filename=filename, artifact_id=ref.storage_ref)

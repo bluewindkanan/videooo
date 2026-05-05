@@ -13,6 +13,7 @@ class TaskStatus(str, Enum):
     needs_review = "needs_review"
     failed = "failed"
     completed = "completed"
+    waiting_for_material = "waiting_for_material"
 
 
 class StepStatus(str, Enum):
@@ -29,6 +30,9 @@ class ArtifactType(str, Enum):
     parsed_json = "parsed_json"
     review = "review"
     error = "error"
+    source_video = "source_video"
+    uploaded_video = "uploaded_video"
+    material_status = "material_status"
 
 
 @dataclass(frozen=True)

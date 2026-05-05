@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import json
 import threading
-from typing import Optional
+from typing import Callable, Optional
 
 from app.src.artifacts.store import ArtifactStore
-from app.src.domain.models import ArtifactType, StepStatus
+from app.src.domain.models import ArtifactType, StepStatus, TaskStatus
+from app.src.skills.llm_adapter import LLMAdapter, LLMError
+from app.src.skills.material_fetch import MaterialFetchResult, run_material_fetch
+from app.src.skills.script_generation import run_script_generation
+from app.src.skills.storyboard import run_storyboard
+from app.src.skills.review_script import run_review_script
 from app.src.storage.sqlite import SqliteStore
 
 
@@ -24,10 +30,36 @@ def _get_lock(task_id: str, step_key: str) -> threading.Lock:
         return _locks[key]
 
 
+# ---------------------------------------------------------------------------
+# Skill dispatch registry
+# ---------------------------------------------------------------------------
+
+STEP_SKILLS: dict[str, Callable[..., object]] = {
+    "material_fetch": run_material_fetch,
+    "script_generation": run_script_generation,
+    "storyboard": run_storyboard,
+    "review_script": run_review_script,
+}
+
+
+class MaterialFetchAllFailed(Exception):
+    """Raised when all source links fail to download."""
+    def __init__(self, results: list[MaterialFetchResult]) -> None:
+        self.results = results
+        super().__init__("all_source_links_failed")
+
+
 class StepRunner:
-    def __init__(self, *, store: SqliteStore, artifact_store: ArtifactStore) -> None:
+    def __init__(
+        self,
+        *,
+        store: SqliteStore,
+        artifact_store: ArtifactStore,
+        llm_adapter: Optional[LLMAdapter] = None,
+    ) -> None:
         self.store = store
         self.artifacts = artifact_store
+        self.llm_adapter = llm_adapter if llm_adapter is not None else LLMAdapter.from_env()
 
     def run_step(self, *, task_id: str, step_key: str) -> bool:
         """Run a step once. Returns True if executed, False if skipped (e.g., locked)."""
@@ -48,9 +80,9 @@ class StepRunner:
                 )
                 return True
 
-            # Deterministic placeholder behavior for the first slice.
             input_text = task.input_text or ""
-            # Deterministic failure injection for S-002 smoke: first attempt fails when input contains FAIL,
+
+            # Deterministic failure injection: first attempt fails when input contains FAIL,
             # second attempt (after retry) succeeds.
             if "FAIL" in input_text.upper() and step.retry_count == 0:
                 self.store.set_step_failed(
@@ -61,61 +93,309 @@ class StepRunner:
                 )
                 return True
 
-            if step_key == "script_generation":
-                draft = {
-                    "hook": f"关于：{input_text}",
-                    "body": f"要点：{input_text}（占位脚本）",
-                    "call_to_action": "关注获取更多干货",
-                    "estimated_duration_seconds": 30,
-                }
-                ref = self.artifacts.write_json(
-                    task_id=task_id,
-                    step_key=step_key,
-                    artifact_type="script_draft",
-                    payload=draft,
+            # Dispatch to registered skill
+            skill_fn = STEP_SKILLS.get(step_key)
+            if skill_fn is None:
+                self.store.set_step_failed(
+                    task_id,
+                    step_key,
+                    error_category="non_retryable",
+                    error_message=f"unknown_step_key:{step_key}",
                 )
-                self.store.add_artifact(
-                    task_id=task_id,
-                    step_key=step_key,
-                    artifact_type=ArtifactType.parsed_json,
-                    storage_ref=ref.storage_ref,
-                    metadata={"kind": "script_draft"},
-                )
-                self.store.set_step_status(task_id, step_key, StepStatus.completed, progress_percent=100)
                 return True
 
-            if step_key == "review_script":
-                findings = [
-                    {
-                        "stage": "script",
-                        "severity": "info",
-                        "location_ref": "hook",
-                        "message": "占位 reviewer 结果：暂无明显问题",
-                        "suggested_fix": "",
-                    }
-                ]
-                ref = self.artifacts.write_json(
-                    task_id=task_id,
-                    step_key=step_key,
-                    artifact_type="review_findings",
-                    payload=findings,
+            try:
+                result = self._run_skill(skill_fn, task_id=task_id, step_key=step_key, task=task)
+            except LLMError as exc:
+                self.store.set_step_failed(
+                    task_id,
+                    step_key,
+                    error_category=exc.error_category,
+                    error_message=str(exc),
                 )
-                self.store.add_artifact(
-                    task_id=task_id,
-                    step_key=step_key,
-                    artifact_type=ArtifactType.review,
-                    storage_ref=ref.storage_ref,
-                    metadata={"kind": "review_findings"},
-                )
-                self.store.set_step_status(task_id, step_key, StepStatus.completed, progress_percent=100)
+                return True
+            except MaterialFetchAllFailed:
+                # Step already marked failed + task set to waiting_for_material in _run_material_fetch
                 return True
 
-            self.store.set_step_failed(
-                task_id,
-                step_key,
-                error_category="non_retryable",
-                error_message=f"unknown_step_key:{step_key}",
-            )
+            self.store.set_step_status(task_id, step_key, StepStatus.completed, progress_percent=100)
             return True
         finally:
             lock.release()
+
+    def _run_skill(
+        self,
+        skill_fn: Callable[..., object],
+        *,
+        task_id: str,
+        step_key: str,
+        task: object,
+    ) -> object:
+        """Execute a skill function, write artifacts, and return the result."""
+        if step_key == "material_fetch":
+            return self._run_material_fetch(skill_fn, task_id=task_id, step_key=step_key, task=task)
+
+        if step_key == "script_generation":
+            return self._run_script_generation(skill_fn, task_id=task_id, step_key=step_key, task=task)
+
+        if step_key == "storyboard":
+            return self._run_storyboard(skill_fn, task_id=task_id, step_key=step_key, task=task)
+
+        if step_key == "review_script":
+            return self._run_review_script(skill_fn, task_id=task_id, step_key=step_key, task=task)
+
+        result = skill_fn()
+        return result
+
+    def _run_material_fetch(
+        self,
+        skill_fn: Callable[..., object],
+        *,
+        task_id: str,
+        step_key: str,
+        task: object,
+    ) -> list:
+        """Run material_fetch skill: download source links, write status artifact."""
+        source_links_json = getattr(task, "source_links_json", "[]")
+        source_links = json.loads(source_links_json) if source_links_json else []
+
+        if not source_links:
+            # No links — step completes immediately
+            return []
+
+        results = skill_fn(
+            source_links=source_links,
+            artifact_store=self.artifacts,
+            task_id=task_id,
+        )
+
+        # Write material_status artifact
+        status_payload = [
+            {
+                "url": r.url,
+                "status": r.status,
+                "failure_category": r.failure_category,
+                "failure_message": r.failure_message,
+                "storage_ref": r.storage_ref,
+                "file_size": r.file_size,
+                "content_type": r.content_type,
+            }
+            for r in results
+        ]
+        ref = self.artifacts.write_json(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type="material_status",
+            payload=status_payload,
+        )
+        self.store.add_artifact(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type=ArtifactType.material_status,
+            storage_ref=ref.storage_ref,
+            metadata={"kind": "material_status", "link_count": len(source_links)},
+        )
+
+        # Write source_video artifacts for successful downloads
+        for r in results:
+            if r.status == "success" and r.storage_ref:
+                self.store.add_artifact(
+                    task_id=task_id,
+                    step_key=step_key,
+                    artifact_type=ArtifactType.source_video,
+                    storage_ref=r.storage_ref,
+                    metadata={"source_url": r.url, "file_size": r.file_size, "content_type": r.content_type},
+                )
+
+        # Determine分流
+        all_failed = all(r.status == "failed" for r in results) if results else False
+        if all_failed:
+            self.store.set_step_failed(
+                task_id, step_key,
+                error_category="needs_user_action",
+                error_message="all_source_links_failed",
+            )
+            self.store.set_task_status(task_id, TaskStatus.waiting_for_material)
+            raise MaterialFetchAllFailed(results)
+
+        return results
+
+    def _run_script_generation(
+        self,
+        skill_fn: Callable[..., dict],
+        *,
+        task_id: str,
+        step_key: str,
+        task: object,
+    ) -> dict:
+        """Run script_generation skill with LLM raw capture and artifact writing."""
+        input_kind = getattr(task, "input_kind", "topic")
+        input_text = getattr(task, "input_text", "") or ""
+
+        # Capture raw LLM response by wrapping the adapter
+        captured: list[str] = []
+        original_chat = self.llm_adapter.chat
+
+        def _capturing_chat(*, system_prompt: str, user_prompt: str, max_tokens: int = 4096) -> str:
+            text = original_chat(system_prompt=system_prompt, user_prompt=user_prompt, max_tokens=max_tokens)
+            captured.append(text)
+            return text
+
+        # Temporarily swap chat to capture raw response
+        self.llm_adapter.chat = _capturing_chat  # type: ignore[assignment]
+        try:
+            result = skill_fn(
+                input_kind=input_kind,
+                input_text=input_text,
+                llm_adapter=self.llm_adapter,
+            )
+        finally:
+            self.llm_adapter.chat = original_chat  # type: ignore[assignment]
+
+        # Write llm_raw artifact
+        if captured:
+            raw_ref = self.artifacts.write_json(
+                task_id=task_id,
+                step_key=step_key,
+                artifact_type="llm_raw",
+                payload={"raw_response": captured[0]},
+            )
+            self.store.add_artifact(
+                task_id=task_id,
+                step_key=step_key,
+                artifact_type=ArtifactType.llm_raw,
+                storage_ref=raw_ref.storage_ref,
+                metadata={"kind": "llm_raw"},
+            )
+
+        # Write parsed_json artifact
+        ref = self.artifacts.write_json(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type="script_draft",
+            payload=result,
+        )
+        self.store.add_artifact(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type=ArtifactType.parsed_json,
+            storage_ref=ref.storage_ref,
+            metadata={"kind": "script_draft"},
+        )
+        return result
+
+    def _run_storyboard(
+        self,
+        skill_fn: Callable[..., object],
+        *,
+        task_id: str,
+        step_key: str,
+        task: object,
+    ) -> list:
+        """Run storyboard skill: read script artifact, generate segments, write artifacts."""
+        script_draft = self._read_latest_artifact_payload(task_id, "script_generation", "parsed_json")
+        if script_draft is None:
+            raise LLMError("script_draft artifact not found", error_category="non_retryable")
+
+        captured: list[str] = []
+        original_chat = self.llm_adapter.chat
+
+        def _capturing_chat(*, system_prompt: str, user_prompt: str, max_tokens: int = 4096) -> str:
+            text = original_chat(system_prompt=system_prompt, user_prompt=user_prompt, max_tokens=max_tokens)
+            captured.append(text)
+            return text
+
+        self.llm_adapter.chat = _capturing_chat  # type: ignore[assignment]
+        try:
+            result = skill_fn(script_draft=script_draft, llm_adapter=self.llm_adapter)
+        finally:
+            self.llm_adapter.chat = original_chat  # type: ignore[assignment]
+
+        if captured:
+            raw_ref = self.artifacts.write_json(
+                task_id=task_id, step_key=step_key, artifact_type="llm_raw",
+                payload={"raw_response": captured[0]},
+            )
+            self.store.add_artifact(
+                task_id=task_id, step_key=step_key, artifact_type=ArtifactType.llm_raw,
+                storage_ref=raw_ref.storage_ref, metadata={"kind": "llm_raw"},
+            )
+
+        ref = self.artifacts.write_json(
+            task_id=task_id, step_key=step_key, artifact_type="storyboard_segments",
+            payload=result,
+        )
+        self.store.add_artifact(
+            task_id=task_id, step_key=step_key, artifact_type=ArtifactType.parsed_json,
+            storage_ref=ref.storage_ref, metadata={"kind": "storyboard_segments"},
+        )
+        return result
+
+    def _run_review_script(
+        self,
+        skill_fn: Callable[..., object],
+        *,
+        task_id: str,
+        step_key: str,
+        task: object,
+    ) -> list:
+        """Run review_script skill: read script + storyboard artifacts, generate findings, write artifacts."""
+        script_draft = self._read_latest_artifact_payload(task_id, "script_generation", "parsed_json")
+        storyboard_segments = self._read_latest_artifact_payload(task_id, "storyboard", "parsed_json")
+        if script_draft is None:
+            raise LLMError("script_draft artifact not found", error_category="non_retryable")
+
+        captured: list[str] = []
+        original_chat = self.llm_adapter.chat
+
+        def _capturing_chat(*, system_prompt: str, user_prompt: str, max_tokens: int = 4096) -> str:
+            text = original_chat(system_prompt=system_prompt, user_prompt=user_prompt, max_tokens=max_tokens)
+            captured.append(text)
+            return text
+
+        self.llm_adapter.chat = _capturing_chat  # type: ignore[assignment]
+        try:
+            result = skill_fn(
+                script_draft=script_draft,
+                storyboard_segments=storyboard_segments or [],
+                llm_adapter=self.llm_adapter,
+            )
+        finally:
+            self.llm_adapter.chat = original_chat  # type: ignore[assignment]
+
+        if captured:
+            raw_ref = self.artifacts.write_json(
+                task_id=task_id, step_key=step_key, artifact_type="llm_raw",
+                payload={"raw_response": captured[0]},
+            )
+            self.store.add_artifact(
+                task_id=task_id, step_key=step_key, artifact_type=ArtifactType.llm_raw,
+                storage_ref=raw_ref.storage_ref, metadata={"kind": "llm_raw"},
+            )
+
+        ref = self.artifacts.write_json(
+            task_id=task_id, step_key=step_key, artifact_type="review_findings",
+            payload=result,
+        )
+        self.store.add_artifact(
+            task_id=task_id, step_key=step_key, artifact_type=ArtifactType.review,
+            storage_ref=ref.storage_ref, metadata={"kind": "review_findings"},
+        )
+        return result
+
+    def _read_latest_artifact_payload(
+        self, task_id: str, step_key: str, artifact_type: str,
+    ) -> object | None:
+        """Read the latest artifact payload for a given task/step/type."""
+        artifacts = self.store.list_artifacts(task_id)
+        matching = [a for a in artifacts if a.step_key == step_key and a.artifact_type.value == artifact_type]
+        if not matching:
+            return None
+        latest = matching[-1]
+        try:
+            import pathlib
+            data = pathlib.Path(latest.storage_ref).read_text(encoding="utf-8")
+            import json as _json
+            return _json.loads(data)
+        except Exception:
+            return None

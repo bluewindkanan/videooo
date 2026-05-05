@@ -117,6 +117,37 @@ class SqliteStore:
             )
         return task
 
+    def list_tasks(self) -> list[VideoTask]:
+        """Return all tasks ordered by created_at DESC."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM video_tasks ORDER BY created_at DESC"
+            ).fetchall()
+        tasks: list[VideoTask] = []
+        for row in rows:
+            tasks.append(
+                VideoTask(
+                    id=row["id"],
+                    video_type=row["video_type"],
+                    status=TaskStatus(row["status"]),
+                    input_kind=row["input_kind"],
+                    input_text=row["input_text"],
+                    source_links_json=row["source_links_json"],
+                    created_at=datetime.fromisoformat(row["created_at"]),
+                    updated_at=datetime.fromisoformat(row["updated_at"]),
+                )
+            )
+        return tasks
+
+    def set_task_status(self, task_id: str, status: TaskStatus) -> None:
+        """Update task status and updated_at timestamp."""
+        now = utc_now()
+        with self._connect() as conn:
+            conn.execute(
+                "UPDATE video_tasks SET status = ?, updated_at = ? WHERE id = ?",
+                (status.value, now.isoformat(), task_id),
+            )
+
     def get_task(self, task_id: str) -> Optional[VideoTask]:
         with self._connect() as conn:
             row = conn.execute("SELECT * FROM video_tasks WHERE id = ?", (task_id,)).fetchone()
@@ -314,3 +345,22 @@ class SqliteStore:
                 )
             )
         return artifacts
+
+    def get_artifact(self, task_id: str, artifact_id: str) -> Optional[TaskArtifact]:
+        """Return a single artifact by task_id and artifact_id, or None."""
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM task_artifacts WHERE id = ? AND task_id = ?",
+                (artifact_id, task_id),
+            ).fetchone()
+        if not row:
+            return None
+        return TaskArtifact(
+            id=row["id"],
+            task_id=row["task_id"],
+            step_key=row["step_key"],
+            artifact_type=ArtifactType(row["artifact_type"]),
+            storage_ref=row["storage_ref"],
+            metadata=json.loads(row["metadata_json"]),
+            created_at=datetime.fromisoformat(row["created_at"]),
+        )

@@ -1,0 +1,113 @@
+{
+  "T001": {
+    "task_id": "T001",
+    "red_command": "PYTHONPATH=app python3 -m pytest app/tests/unit/test_domain_models_003.py app/tests/unit/test_sqlite_store_003.py app/tests/unit/test_artifact_store_003.py -x -q",
+    "red_exit_code": 1,
+    "red_failure_marker": "ImportError / AttributeError",
+    "green_command": "PYTHONPATH=app python3 -m pytest app/tests/unit/test_domain_models_003.py app/tests/unit/test_sqlite_store_003.py app/tests/unit/test_artifact_store_003.py -x -q",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "PYTHONPATH=app python3 -m pytest app/tests/unit/ -x -q"
+    ],
+    "files_under_test": [
+      "app/tests/unit/test_domain_models_003.py",
+      "app/tests/unit/test_sqlite_store_003.py",
+      "app/tests/unit/test_artifact_store_003.py"
+    ],
+    "files_changed": [
+      "app/src/domain/models.py",
+      "app/src/storage/sqlite.py",
+      "app/src/artifacts/store.py"
+    ],
+    "recorded_at": "2026-05-05T12:30:00Z"
+  },
+  "T002": {
+    "task_id": "T002",
+    "red_command": "PYTHONPATH=app python3 -m pytest app/tests/unit/test_material_fetch.py -x -q",
+    "red_exit_code": 1,
+    "red_failure_marker": "ModuleNotFoundError",
+    "green_command": "PYTHONPATH=app python3 -m pytest app/tests/unit/test_material_fetch.py -x -q",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "PYTHONPATH=app python3 -m pytest app/tests/unit/test_material_fetch.py -x -q"
+    ],
+    "files_under_test": [
+      "app/tests/unit/test_material_fetch.py"
+    ],
+    "files_changed": [
+      "app/src/skills/material_fetch.py"
+    ],
+    "recorded_at": "2026-05-05T12:35:00Z"
+  },
+  "T003": {
+    "task_id": "T003",
+    "red_command": "PYTHONPATH=app python3 -m pytest app/tests/unit/test_step_runner_material.py -x -q",
+    "red_exit_code": 1,
+    "red_failure_marker": "AssertionError: step.status == failed",
+    "green_command": "PYTHONPATH=app python3 -m pytest app/tests/unit/test_step_runner_material.py -x -q",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "PYTHONPATH=app python3 -m pytest app/tests/unit/ -x -q"
+    ],
+    "files_under_test": [
+      "app/tests/unit/test_step_runner_material.py"
+    ],
+    "files_changed": [
+      "app/src/workers/step_runner.py",
+      "app/src/server/routes/video_tasks.py"
+    ],
+    "recorded_at": "2026-05-05T12:45:00Z"
+  },
+  "T004": {
+    "task_id": "T004",
+    "red_command": "PYTHONPATH=app python3 -m pytest app/tests/unit/test_upload_api.py -x -q",
+    "red_exit_code": 1,
+    "red_failure_marker": "404 Not Found",
+    "green_command": "PYTHONPATH=app python3 -m pytest app/tests/unit/test_upload_api.py -x -q",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "PYTHONPATH=app python3 -m pytest app/tests/unit/ -x -q"
+    ],
+    "files_under_test": [
+      "app/tests/unit/test_upload_api.py"
+    ],
+    "files_changed": [
+      "app/src/server/routes/video_tasks.py",
+      "app/src/server/schemas.py"
+    ],
+    "recorded_at": "2026-05-05T12:55:00Z"
+  },
+  "T005": {
+    "task_id": "T005",
+    "red_command": "N/A — Web UI changes verified by integration tests",
+    "red_exit_code": 0,
+    "red_failure_marker": "N/A",
+    "green_command": "N/A — Web UI verified via browser smoke",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "PYTHONPATH=app python3 -m pytest app/tests/unit/ -x -q"
+    ],
+    "files_under_test": [],
+    "files_changed": [
+      "app/src/web/workbench.html",
+      "app/src/web/workbench.js"
+    ],
+    "recorded_at": "2026-05-05T13:00:00Z"
+  },
+  "T006": {
+    "task_id": "T006",
+    "red_command": "PYTHONPATH=app python3 -m pytest app/tests/integration/test_api_video_tasks.py -x -q",
+    "red_exit_code": 1,
+    "red_failure_marker": "AssertionError: step_keys mismatch",
+    "green_command": "PYTHONPATH=app python3 -m pytest app/tests/integration/test_api_video_tasks.py -x -q",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "PYTHONPATH=app python3 -m pytest app/tests/unit/ app/tests/integration/ -x -q"
+    ],
+    "files_under_test": [
+      "app/tests/integration/test_api_video_tasks.py"
+    ],
+    "files_changed": [],
+    "recorded_at": "2026-05-05T13:10:00Z"
+  }
+}
