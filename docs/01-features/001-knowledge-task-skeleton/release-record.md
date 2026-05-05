@@ -26,4 +26,4 @@ released_at: 2026-05-05T09:39:01Z
 
 - local-record:
   - release_record: written
-  - commit: c6cb5d51a0cbeb9fc3e8236aad341136e9250a20
+  - commit: 744353b63924800af48d52f42d183300df0f4f6e
