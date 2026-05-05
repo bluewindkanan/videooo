@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bewater.local/contracts/validation-evidence.schema.json",
+  "x-bewater-version": "4.0.0",
+  "title": "BeWater Validation Evidence",
+  "type": "object",
+  "required": [
+    "validation_report_path",
+    "evidence_index_path",
+    "generated_at"
+  ],
+  "properties": {
+    "validation_report_path": { "type": "string" },
+    "evidence_index_path": { "type": "string" },
+    "coverage_summary_path": { "type": ["string", "null"] },
+    "lighthouse_summary_path": { "type": ["string", "null"] },
+    "generated_at": { "type": "string" }
+  },
+  "additionalProperties": true
+}

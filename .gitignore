@@ -1,0 +1,35 @@
+# BeWater 临时文件
+.bewater/.tmp/
+.bewater/*.log
+
+# 依赖
+node_modules/
+.pnp
+.pnp.js
+
+# 测试
+app/coverage/
+*.lcov
+
+# 生产构建
+app/build/
+app/dist/
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# Reference repos (often contain nested .git)
+resources/

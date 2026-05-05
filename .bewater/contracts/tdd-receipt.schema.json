@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bewater.local/contracts/tdd-receipt.schema.json",
+  "x-bewater-version": "4.0.0",
+  "title": "BeWater TDD Receipt",
+  "type": "object",
+  "required": [
+    "task_id",
+    "red_command",
+    "red_exit_code",
+    "red_failure_marker",
+    "green_command",
+    "green_exit_code",
+    "verify_commands",
+    "files_under_test",
+    "files_changed",
+    "recorded_at"
+  ],
+  "properties": {
+    "task_id": { "type": "string" },
+    "red_command": { "type": "string" },
+    "red_exit_code": { "type": "integer" },
+    "red_failure_marker": { "type": "string" },
+    "green_command": { "type": "string" },
+    "green_exit_code": { "type": "integer" },
+    "verify_commands": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "files_under_test": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "files_changed": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "recorded_at": { "type": "string" }
+  },
+  "additionalProperties": true
+}

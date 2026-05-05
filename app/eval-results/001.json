@@ -1,0 +1,26 @@
+{
+  "feature_id": "001",
+  "eval_id": "001",
+  "mode": "retry",
+  "case_count": 3,
+  "overall_ok": true,
+  "schema_pass_rate": 1.0,
+  "usefulness_rate": 1.0,
+  "cases": [
+    {
+      "ok": true,
+      "schema_ok": true,
+      "quality_ok": true
+    },
+    {
+      "ok": true,
+      "schema_ok": true,
+      "quality_ok": true
+    },
+    {
+      "ok": true,
+      "schema_ok": true,
+      "quality_ok": true
+    }
+  ]
+}

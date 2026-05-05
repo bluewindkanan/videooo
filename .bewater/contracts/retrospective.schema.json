@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bewater.local/contracts/retrospective.schema.json",
+  "x-bewater-version": "4.0.0",
+  "title": "BeWater Retrospective Summary",
+  "type": "object",
+  "required": ["feature", "completed_at", "outcome", "learnings", "action_items"],
+  "properties": {
+    "feature": {"type": "string"},
+    "completed_at": {"type": "string"},
+    "outcome": {"type": "string"},
+    "learnings": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "action_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "owner", "status"],
+        "properties": {
+          "id": {"type": "string"},
+          "description": {"type": "string"},
+          "owner": {"type": "string"},
+          "status": {"enum": ["open", "planned", "done"]}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

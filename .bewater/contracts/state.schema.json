@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bewater.local/contracts/state.schema.json",
+  "x-bewater-version": "4.0.0",
+  "title": "BeWater State",
+  "type": "object",
+  "required": [
+    "version",
+    "methodology_version",
+    "current_state",
+    "gates",
+    "artifacts",
+    "runtime",
+    "compat"
+  ],
+  "properties": {
+    "version": { "type": "string" },
+    "methodology_version": { "type": "string" },
+    "current_state": {
+      "enum": [
+        "uninitialized",
+        "initialized",
+        "specified",
+        "planned",
+        "building",
+        "shipped"
+      ]
+    },
+    "previous_state": { "type": ["string", "null"] },
+    "project": { "type": "string" },
+    "current_feature": { "type": ["string", "null"] },
+    "feature_context": {
+      "type": "object",
+      "properties": {
+        "complexity_tier": { "type": ["string", "null"] },
+        "implementation_mode": {
+          "enum": ["greenfield", "extension", "existing_partial", "existing_complete", null]
+        },
+        "existing_implementation_note": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "ready_for_build": { "type": "boolean" },
+    "shipped_features": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "initialized_at": { "type": ["string", "null"] },
+    "specified_at": { "type": ["string", "null"] },
+    "planned_at": { "type": ["string", "null"] },
+    "building_at": { "type": ["string", "null"] },
+    "shipped_at": { "type": ["string", "null"] },
+    "learned_at": { "type": ["string", "null"] },
+    "internal_stage": { "type": ["string", "null"] },
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "foundation_review_path": { "type": ["string", "null"] },
+        "prebuild_review_path": { "type": ["string", "null"] },
+        "feature_path": { "type": ["string", "null"] },
+        "design_path": { "type": ["string", "null"] },
+        "tasks_path": { "type": ["string", "null"] },
+        "review_note_path": { "type": ["string", "null"] },
+        "validation_report_path": { "type": ["string", "null"] },
+        "release_record_path": { "type": ["string", "null"] },
+        "validation_evidence_index_path": { "type": ["string", "null"] },
+        "builder_receipt_schema_path": { "type": ["string", "null"] },
+        "tdd_receipt_schema_path": { "type": ["string", "null"] },
+        "validation_evidence_schema_path": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "gates": {
+      "type": "object",
+      "required": [
+        "foundation_gate",
+        "feature_review_gate",
+        "architect_gate",
+        "prebuild_review_gate",
+        "review_gate",
+        "ship_precheck_gate"
+      ],
+      "properties": {
+        "foundation_gate": { "$ref": "gate.schema.json" },
+        "feature_review_gate": { "$ref": "gate.schema.json" },
+        "architect_gate": { "$ref": "gate.schema.json" },
+        "prebuild_review_gate": { "$ref": "gate.schema.json" },
+        "review_gate": { "$ref": "gate.schema.json" },
+        "ship_precheck_gate": { "$ref": "gate.schema.json" }
+      },
+      "additionalProperties": true
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["active_flow", "subphase", "route_mode", "retry_counters", "release_intent"],
+      "properties": {
+        "active_flow": { "type": ["string", "null"] },
+        "subphase": { "type": ["string", "null"] },
+        "route_mode": { "enum": ["standard", "quick"] },
+        "validation_outcome": { "type": ["object", "null"] },
+        "retry_counters": {
+          "type": "object",
+          "required": ["auto_repeat_blockers", "evidence_refresh_attempts"],
+          "properties": {
+            "auto_repeat_blockers": { "type": "integer" },
+            "evidence_refresh_attempts": { "type": "integer" }
+          },
+          "additionalProperties": false
+        },
+        "release_intent": { "type": ["object", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "compat": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true
+    },
+    "contract_schemas": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "state_history": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "next_command": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}

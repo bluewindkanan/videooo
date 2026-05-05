@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bewater.local/contracts/release-intent.schema.json",
+  "x-bewater-version": "4.0.0",
+  "title": "BeWater Release Intent",
+  "type": "object",
+  "required": ["intent", "confirmed_by", "confirmed_at", "scope", "irreversible_acknowledged"],
+  "properties": {
+    "intent": {"enum": ["release", "audit-only"]},
+    "confirmed_by": {"type": "string"},
+    "confirmed_at": {"type": "string"},
+    "scope": {"type": "string"},
+    "irreversible_acknowledged": {"type": "boolean"},
+    "source": {"type": "string"}
+  },
+  "additionalProperties": true
+}

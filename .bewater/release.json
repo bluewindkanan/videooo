@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "release_boundary": "local",
+  "adapters": [
+    {
+      "id": "local-record",
+      "type": "local",
+      "enabled": true,
+      "actions": ["release_record", "commit"]
+    }
+  ]
+}

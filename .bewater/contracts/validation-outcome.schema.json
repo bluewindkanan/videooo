@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bewater.local/contracts/validation-outcome.schema.json",
+  "x-bewater-version": "4.0.0",
+  "title": "BeWater Validation Outcome",
+  "type": "object",
+  "required": [
+    "classification",
+    "release_decision",
+    "decider",
+    "consulted_roles",
+    "evaluated_at",
+    "recommended_next_action",
+    "evidence_refs"
+    ,
+    "blockers"
+  ],
+  "properties": {
+    "classification": {
+      "enum": [
+        "ready_for_precheck",
+        "evidence_incomplete_or_stale",
+        "implementation_gap",
+        "spec_package_drift",
+        "goal_scope_contradiction"
+      ]
+    },
+    "release_decision": { "enum": ["go", "no-go"] },
+    "decider": { "enum": ["qa", "reviewer", "planner", "product"] },
+    "consulted_roles": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "evaluated_at": { "type": "string" },
+    "recommended_next_action": { "type": "string" },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "template": "methodology-backlog.json",
+  "allowed_statuses": ["open", "accepted", "rejected", "planned", "done"],
+  "item_shape": {
+    "id": "MB-001",
+    "severity": "must|should|could",
+    "source": "retrospective.md#section",
+    "target_file": "path/to/methodology/file.md",
+    "evidence": "path/to/evidence.md#section",
+    "problem": "specific methodology problem",
+    "proposed_change": "specific proposed change",
+    "status": "open",
+    "owner": "methodology-maintainer",
+    "decision": "pending",
+    "updated_at": "YYYY-MM-DD"
+  },
+  "items": []
+}

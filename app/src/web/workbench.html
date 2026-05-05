@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Videooo Workbench</title>
+    <style>
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 24px; }
+      textarea { width: 100%; min-height: 80px; }
+      pre { background: #111; color: #eee; padding: 12px; overflow: auto; }
+      .row { margin: 12px 0; }
+      .muted { color: #666; }
+      button { padding: 8px 12px; }
+      .grid { display: grid; grid-template-columns: 180px 1fr; gap: 12px; align-items: start; }
+    </style>
+  </head>
+  <body>
+    <h1>知识分享视频任务骨架（Workbench）</h1>
+    <p class="muted">
+      素材权利边界：你必须确保对输入素材（链接/上传）拥有使用权；系统不承诺自动版权判断。<br />
+      若素材链接下载/解析失败：当前切片会记录失败原因并建议改为上传素材（上传能力可后续补齐）。
+    </p>
+
+    <div class="grid">
+      <div>input_kind</div>
+      <div>
+        <select id="inputKind">
+          <option value="topic">topic</option>
+          <option value="draft">draft</option>
+          <option value="article_url">article_url</option>
+        </select>
+      </div>
+
+      <div>input_text</div>
+      <div><textarea id="inputText" placeholder="输入主题/文案/链接..."></textarea></div>
+
+      <div>source_links</div>
+      <div><textarea id="sourceLinks" placeholder="每行一个素材链接（可留空）"></textarea></div>
+    </div>
+
+    <div class="row">
+      <button id="createBtn">创建任务</button>
+      <span id="taskId" class="muted"></span>
+    </div>
+
+    <div class="row">
+      <button id="refreshBtn">刷新状态</button>
+      <button id="retryBtn">重试 script_generation（若失败）</button>
+    </div>
+
+    <h2>Task detail</h2>
+    <pre id="detailOut">{}</pre>
+
+    <h2>Artifacts</h2>
+    <pre id="artOut">{}</pre>
+
+    <script src="/workbench.js"></script>
+  </body>
+</html>
+

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bewater.local/contracts/builder-receipt.schema.json",
+  "x-bewater-version": "4.0.0",
+  "title": "BeWater Builder Receipt",
+  "type": "object",
+  "required": ["status", "completion_state", "files_verified"],
+  "properties": {
+    "status": { "enum": ["passed", "failed", "blocked"] },
+    "completion_state": {
+      "enum": ["done", "done_with_concerns", "needs_context", "blocked"]
+    },
+    "concerns": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "tasks_completed": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "files_verified": { "type": "boolean" },
+    "callsites_checked": { "type": "boolean" },
+    "shared_api_changed": { "type": "boolean" },
+    "type_escape_used": { "type": "boolean" },
+    "write_edit_permission_denied": { "type": "boolean" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,207 @@
+{
+  "T001": {
+    "task_id": "T001",
+    "red_command": "python3 -m pytest -q",
+    "red_exit_code": 2,
+    "red_failure_marker": "ERROR collecting resources/",
+    "green_command": "python3 -m pytest -q",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m compileall app",
+      "python3 -m pytest -q"
+    ],
+    "files_under_test": [
+      "pytest.ini",
+      "app/__init__.py",
+      "app/src/server/main.py",
+      "app/tests/unit/test_sanity.py"
+    ],
+    "files_changed": [
+      "pytest.ini",
+      "app/__init__.py",
+      "app/src/__init__.py",
+      "app/src/server/__init__.py",
+      "app/src/server/main.py",
+      "app/tests/unit/test_sanity.py",
+      "app/pyproject.toml"
+    ],
+    "recorded_at": "2026-05-05T09:04:28Z"
+  }
+  ,
+  "T002": {
+    "task_id": "T002",
+    "red_command": "python3 -m pytest -q app/tests/unit/test_models.py",
+    "red_exit_code": 4,
+    "red_failure_marker": "ERROR: file or directory not found: app/tests/unit/test_models.py",
+    "green_command": "python3 -m pytest -q app/tests/unit/test_models.py",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m compileall app",
+      "python3 -m pytest -q"
+    ],
+    "files_under_test": [
+      "app/src/domain/models.py",
+      "app/src/storage/sqlite.py",
+      "app/tests/unit/test_models.py"
+    ],
+    "files_changed": [
+      "app/src/domain/__init__.py",
+      "app/src/domain/models.py",
+      "app/src/storage/__init__.py",
+      "app/src/storage/sqlite.py",
+      "app/tests/unit/test_models.py"
+    ],
+    "recorded_at": "2026-05-05T09:09:07Z"
+  }
+  ,
+  "T003": {
+    "task_id": "T003",
+    "red_command": "python3 -m pytest -q app/tests/unit/test_artifacts.py",
+    "red_exit_code": 4,
+    "red_failure_marker": "ERROR: file or directory not found: app/tests/unit/test_artifacts.py",
+    "green_command": "python3 -m pytest -q app/tests/unit/test_artifacts.py",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m pytest -q"
+    ],
+    "files_under_test": [
+      "app/src/artifacts/store.py",
+      "app/tests/unit/test_artifacts.py"
+    ],
+    "files_changed": [
+      "app/src/artifacts/__init__.py",
+      "app/src/artifacts/store.py",
+      "app/tests/unit/test_artifacts.py"
+    ],
+    "recorded_at": "2026-05-05T09:10:32Z"
+  }
+  ,
+  "T004": {
+    "task_id": "T004",
+    "red_command": "python3 -m pytest -q app/tests/integration/test_api_video_tasks.py",
+    "red_exit_code": 4,
+    "red_failure_marker": "ERROR: file or directory not found: app/tests/integration/test_api_video_tasks.py",
+    "green_command": "python3 -m pytest -q app/tests/integration/test_api_video_tasks.py",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m compileall app",
+      "python3 -m pytest -q"
+    ],
+    "files_under_test": [
+      "app/src/server/main.py",
+      "app/src/server/routes/video_tasks.py",
+      "app/src/server/schemas.py",
+      "app/src/storage/sqlite.py",
+      "app/tests/integration/test_api_video_tasks.py"
+    ],
+    "files_changed": [
+      "app/src/server/main.py",
+      "app/src/server/schemas.py",
+      "app/src/server/routes/__init__.py",
+      "app/src/server/routes/video_tasks.py",
+      "app/src/storage/sqlite.py",
+      "app/tests/integration/test_api_video_tasks.py"
+    ],
+    "recorded_at": "2026-05-05T09:13:25Z"
+  }
+  ,
+  "T005": {
+    "task_id": "T005",
+    "red_command": "python3 -m pytest -q app/tests/unit/test_step_runner.py",
+    "red_exit_code": 4,
+    "red_failure_marker": "ERROR: file or directory not found: app/tests/unit/test_step_runner.py",
+    "green_command": "python3 -m pytest -q app/tests/unit/test_step_runner.py",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m pytest -q"
+    ],
+    "files_under_test": [
+      "app/src/workers/step_runner.py",
+      "app/src/server/routes/video_tasks.py",
+      "app/src/storage/sqlite.py",
+      "app/tests/unit/test_step_runner.py"
+    ],
+    "files_changed": [
+      "app/src/workers/__init__.py",
+      "app/src/workers/step_runner.py",
+      "app/src/server/main.py",
+      "app/src/server/routes/video_tasks.py",
+      "app/src/storage/sqlite.py",
+      "app/tests/integration/test_api_video_tasks.py",
+      "app/tests/unit/test_step_runner.py"
+    ],
+    "recorded_at": "2026-05-05T09:18:33Z"
+  }
+  ,
+  "T007": {
+    "task_id": "T007",
+    "red_command": "bash app/tests/blackbox/video_task_smoke.sh",
+    "red_exit_code": 127,
+    "red_failure_marker": "No such file or directory",
+    "green_command": "bash app/tests/blackbox/video_task_smoke.sh",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m uvicorn app.src.server.main:app --host 127.0.0.1 --port 8000 & sleep 1; curl -sS http://127.0.0.1:8000/healthz >/dev/null; bash app/tests/blackbox/video_task_smoke.sh; bash app/tests/blackbox/video_task_retry_smoke.sh"
+    ],
+    "files_under_test": [
+      "app/tests/blackbox/video_task_smoke.sh",
+      "app/tests/blackbox/video_task_retry_smoke.sh"
+    ],
+    "files_changed": [
+      "app/tests/blackbox/_common.sh",
+      "app/tests/blackbox/video_task_smoke.sh",
+      "app/tests/blackbox/video_task_retry_smoke.sh",
+      "app/src/workers/step_runner.py"
+    ],
+    "recorded_at": "2026-05-05T09:25:25Z"
+  }
+  ,
+  "T008": {
+    "task_id": "T008",
+    "red_command": "python3 -m app.evals.run_001 --verify",
+    "red_exit_code": 1,
+    "red_failure_marker": "ModuleNotFoundError: No module named 'app.evals'",
+    "green_command": "python3 -m app.evals.run_001 --verify",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m app.evals.run_001 --verify",
+      "python3 -m app.evals.run_001 --retry --verify"
+    ],
+    "files_under_test": [
+      "app/evals/001/golden.jsonl",
+      "app/evals/001/rubric.md",
+      "app/evals/run_001.py"
+    ],
+    "files_changed": [
+      "app/evals/__init__.py",
+      "app/evals/001/golden.jsonl",
+      "app/evals/001/rubric.md",
+      "app/evals/run_001.py",
+      "app/eval-results/001.json"
+    ],
+    "recorded_at": "2026-05-05T09:28:53Z"
+  }
+  ,
+  "T006": {
+    "task_id": "T006",
+    "red_command": "curl -sSf http://127.0.0.1:8000/workbench | head",
+    "red_exit_code": 22,
+    "red_failure_marker": "404 Not Found",
+    "green_command": "curl -sSf http://127.0.0.1:8000/workbench | head",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m uvicorn app.src.server.main:app --host 127.0.0.1 --port 8000 & sleep 1; curl -sSf http://127.0.0.1:8000/workbench | head -n 5"
+    ],
+    "files_under_test": [
+      "app/src/web/workbench.html",
+      "app/src/web/workbench.js",
+      "app/src/server/main.py"
+    ],
+    "files_changed": [
+      "app/src/server/main.py",
+      "app/src/web/workbench.html",
+      "app/src/web/workbench.js"
+    ],
+    "recorded_at": "2026-05-05T09:32:44Z"
+  }
+}

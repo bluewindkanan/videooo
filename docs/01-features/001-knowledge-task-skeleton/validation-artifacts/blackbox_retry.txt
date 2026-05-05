@@ -1,0 +1,9 @@
+[retry-smoke] create task that fails on first attempt
+{"task_id":"822935277d114b819ee60983827307c0"}
+[retry-smoke] get task detail: 822935277d114b819ee60983827307c0
+{"task":{"id":"822935277d114b819ee60983827307c0","video_type":"knowledge_share","status":"pending","input_kind":"topic","input_text":"FAIL once","source_links":[],"created_at":"2026-05-05T09:35:22.617610Z","updated_at":"2026-05-05T09:35:22.617610Z"},"steps":[{"step_key":"review_script","status":"pending","progress_percent":0,"error_category":null,"error_message":null,"retry_count":0,"started_at":null,"completed_at":null},{"step_key":"script_generation","status":"failed","progress_percent":0,"error_category":"needs_user_action","error_message":"simulated failure (contains FAIL)","retry_count":0,"started_at":null,"completed_at":null}]}
+[retry-smoke] retry step
+{"accepted":true}
+[retry-smoke] verify step completed after retry
+{"task":{"id":"822935277d114b819ee60983827307c0","video_type":"knowledge_share","status":"pending","input_kind":"topic","input_text":"FAIL once","source_links":[],"created_at":"2026-05-05T09:35:22.617610Z","updated_at":"2026-05-05T09:35:22.617610Z"},"steps":[{"step_key":"review_script","status":"pending","progress_percent":0,"error_category":null,"error_message":null,"retry_count":0,"started_at":null,"completed_at":null},{"step_key":"script_generation","status":"completed","progress_percent":100,"error_category":null,"error_message":null,"retry_count":1,"started_at":null,"completed_at":null}]}
+[retry-smoke] ok

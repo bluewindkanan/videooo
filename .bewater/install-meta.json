@@ -1,0 +1,10 @@
+{
+  "methodology_version": "4.0.0",
+  "installed_at": "2026-05-05T05:08:49Z",
+  "source_dir": "/Users/sam/Desktop/ai-building/05-implementations/bewater",
+  "application_root": "app",
+  "workflow_doc": "WORKFLOW.md",
+  "readme_doc": "README.md",
+  "app_readme_doc": "app/README.md",
+  "doctor_script": ".claude/scripts/bewater-doctor.sh"
+}

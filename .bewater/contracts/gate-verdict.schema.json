@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bewater.local/contracts/gate-verdict.schema.json",
+  "x-bewater-version": "4.0.0",
+  "title": "BeWater Gate Verdict",
+  "type": "object",
+  "required": ["gate", "verdict", "evaluated_at", "evidence_refs", "blockers", "warnings", "recommended_next_action"],
+  "properties": {
+    "gate": {"type": "string"},
+    "verdict": {"enum": ["pass", "fail", "blocked", "unknown"]},
+    "evaluated_at": {"type": "string"},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}},
+    "blockers": {"type": "array", "items": {"type": "string"}},
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "recommended_next_action": {"type": "string"},
+    "inputs": {"type": "object"},
+    "freshness": {"type": "object"}
+  },
+  "additionalProperties": true
+}

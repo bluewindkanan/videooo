@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bewater.local/contracts/template-tier.schema.json",
+  "x-bewater-version": "4.0.0",
+  "title": "BeWater Template Tier",
+  "type": "object",
+  "required": ["tier", "include"],
+  "properties": {
+    "tier": {"enum": ["lite", "standard", "deep"]},
+    "include": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    }
+  },
+  "additionalProperties": true
+}

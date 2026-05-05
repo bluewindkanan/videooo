@@ -1,0 +1,167 @@
+{
+  "version": "4.0.0",
+  "methodology_version": "4.0.0",
+  "current_state": "initialized",
+  "previous_state": "uninitialized",
+  "project": "Project Name",
+  "current_feature": null,
+  "feature_context": {
+    "complexity_tier": "standard",
+    "implementation_mode": "greenfield",
+    "existing_implementation_note": null
+  },
+  "ready_for_build": false,
+  "shipped_features": [],
+  "initialized_at": "2026-01-01T00:00:00Z",
+  "specified_at": null,
+  "planned_at": null,
+  "building_at": null,
+  "shipped_at": null,
+  "learned_at": null,
+  "internal_stage": null,
+  "artifacts": {
+    "foundation_review_path": null,
+    "prebuild_review_path": null,
+    "feature_path": null,
+    "design_path": null,
+    "tasks_path": null,
+    "review_note_path": null,
+    "validation_report_path": null,
+    "release_record_path": null,
+    "validation_evidence_index_path": null,
+    "tdd_receipts_dir": null
+  },
+  "contract_schemas": {
+    "state_schema_path": ".bewater/contracts/state.schema.json",
+    "gate_schema_path": ".bewater/contracts/gate.schema.json",
+    "builder_receipt_schema_path": ".bewater/contracts/builder-receipt.schema.json",
+    "tdd_receipt_schema_path": ".bewater/contracts/tdd-receipt.schema.json",
+    "validation_evidence_schema_path": ".bewater/contracts/validation-evidence.schema.json"
+  },
+  "gates": {
+    "foundation_gate": {
+      "status": "pending",
+      "freshness": {
+        "status": "unknown",
+        "checked_at": null,
+        "stale_reasons": []
+      },
+      "concerns": [],
+      "blockers": [],
+      "evaluated_at": null,
+      "evaluated_commit_sha": null,
+      "input_digest": "",
+      "input_refs": [],
+      "input_digests": {},
+      "produced_by": "init-flow",
+      "evidence_refs": []
+    },
+    "feature_review_gate": {
+      "status": "pending",
+      "freshness": {
+        "status": "unknown",
+        "checked_at": null,
+        "stale_reasons": []
+      },
+      "concerns": [],
+      "blockers": [],
+      "evaluated_at": null,
+      "evaluated_commit_sha": null,
+      "input_digest": "",
+      "input_refs": [],
+      "input_digests": {},
+      "produced_by": "goal-flow",
+      "evidence_refs": []
+    },
+    "architect_gate": {
+      "status": "pending",
+      "freshness": {
+        "status": "unknown",
+        "checked_at": null,
+        "stale_reasons": []
+      },
+      "concerns": [],
+      "blockers": [],
+      "evaluated_at": null,
+      "evaluated_commit_sha": null,
+      "input_digest": "",
+      "input_refs": [],
+      "input_digests": {},
+      "produced_by": "goal-flow",
+      "evidence_refs": []
+    },
+    "prebuild_review_gate": {
+      "status": "pending",
+      "freshness": {
+        "status": "unknown",
+        "checked_at": null,
+        "stale_reasons": []
+      },
+      "concerns": [],
+      "blockers": [],
+      "evaluated_at": null,
+      "evaluated_commit_sha": null,
+      "input_digest": "",
+      "input_refs": [],
+      "input_digests": {},
+      "produced_by": "plan-flow",
+      "evidence_refs": []
+    },
+    "review_gate": {
+      "status": "pending",
+      "freshness": {
+        "status": "unknown",
+        "checked_at": null,
+        "stale_reasons": []
+      },
+      "concerns": [],
+      "blockers": [],
+      "evaluated_at": null,
+      "evaluated_commit_sha": null,
+      "input_digest": "",
+      "input_refs": [],
+      "input_digests": {},
+      "produced_by": "build-flow",
+      "evidence_refs": []
+    },
+    "ship_precheck_gate": {
+      "status": "pending",
+      "freshness": {
+        "status": "unknown",
+        "checked_at": null,
+        "stale_reasons": []
+      },
+      "concerns": [],
+      "blockers": [],
+      "evaluated_at": null,
+      "evaluated_commit_sha": null,
+      "input_digest": "",
+      "input_refs": [],
+      "input_digests": {},
+      "produced_by": "ship-flow",
+      "evidence_refs": [],
+      "evidence_checked": false
+    }
+  },
+  "runtime": {
+    "active_flow": null,
+    "subphase": null,
+    "route_mode": "standard",
+    "validation_outcome": null,
+    "retry_counters": {
+      "auto_repeat_blockers": 0,
+      "evidence_refresh_attempts": 0
+    },
+    "release_intent": null
+  },
+  "compat": {},
+  "state_history": [
+    {
+      "from": "uninitialized",
+      "to": "initialized",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "trigger": "/bewater-init"
+    }
+  ],
+  "next_command": "/bewater-goal"
+}

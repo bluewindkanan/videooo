@@ -1,0 +1,7 @@
+[smoke] create task
+{"task_id":"a77a1d3c5a65417fa6fd7a0514ae07ad"}
+[smoke] get task detail: a77a1d3c5a65417fa6fd7a0514ae07ad
+{"task":{"id":"a77a1d3c5a65417fa6fd7a0514ae07ad","video_type":"knowledge_share","status":"pending","input_kind":"topic","input_text":"hello","source_links":["https://example.com/a.mp4"],"created_at":"2026-05-05T09:35:22.410019Z","updated_at":"2026-05-05T09:35:22.410019Z"},"steps":[{"step_key":"review_script","status":"pending","progress_percent":0,"error_category":null,"error_message":null,"retry_count":0,"started_at":null,"completed_at":null},{"step_key":"script_generation","status":"completed","progress_percent":100,"error_category":null,"error_message":null,"retry_count":0,"started_at":null,"completed_at":null}]}
+[smoke] list artifacts: a77a1d3c5a65417fa6fd7a0514ae07ad
+{"artifacts":[{"id":"93415cd660b343aca67d32897f43fa37","step_key":"input","artifact_type":"input","storage_ref":"db://input","metadata":{"input_kind":"topic","input_text":"hello","source_links":["https://example.com/a.mp4"]},"created_at":"2026-05-05T09:35:22.412965Z"},{"id":"1451ed8c9bb34084a0f96a3d1ff0a836","step_key":"script_generation","artifact_type":"parsed_json","storage_ref":"app/.artifacts/a77a1d3c5a65417fa6fd7a0514ae07ad/script_generation-script_draft-1777973722416-bf88cf9dea214fbe91529788d85d22ad.json","metadata":{"kind":"script_draft"},"created_at":"2026-05-05T09:35:22.417073Z"}]}
+[smoke] ok
