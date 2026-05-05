@@ -16,8 +16,9 @@ effort: medium
 - initialize `.bewater/` project structure
 - create baseline artifacts
 - run foundation review
-- recommend the first feature slice from the reviewed project foundation
-- advance to `initialized` only when `foundation_gate = passed`
+- Generate initial `docs/00-project/product-plan.md` as the durable feature-candidate planning layer
+- recommend the first MVP slice from the reviewed project foundation and record it in product-plan
+- advance to `initialized` only when `foundation_gate = passed` and product-plan semantic check passes
 
 ## Vision Discovery Protocol
 
@@ -79,10 +80,12 @@ effort: medium
 6. **阶段三**：对话式引导用户确认 `constitution.md`（项目宪法 — 不可变原则）。模板已预填 5 条 BeWater 默认原则（Evidence-First Delivery、User-Visible Slice First、Simplicity Over Speculation、Use Existing Architecture Directly、Boundary Validation），用户可确认采纳、删除不适用的、或新增项目特有的原则。原则数量建议 3-7 条
 7. 清理并初始化 `decision-log.md`，不得保留示例占位符、跨项目经验或与当前项目无关的条目
 8. 生成并持久化 `docs/00-project/foundation-review.md`
-9. 从 `vision.md` 的 MVP、Project Mode、Target User、Core Problem、Core Promise、Narrowest Wedge、Direction / Now、Product Principles、Success Signals、Non-goals 和 Open Assumptions 中生成 2-3 个首个功能候选，写入 `foundation-review.md`
-10. 写入 `foundation_gate`，检查 north star clarity、architecture constraints coherence、constitution completeness、decision-log template cleanup、placeholder removal、application_root path alignment 与项目层文档矛盾
-11. 验证四个项目层文件已填写完整，`foundation_gate.status = passed`，且至少有一个推荐的首个功能候选
-12. 告知用户"初始化完成，请先确认首个功能候选；确认后运行 /bewater-goal 创建第一个功能目标"
+9. 生成并持久化 `docs/00-project/product-plan.md`，作为 `vision.md -> feature.md` 之间的项目级规划层
+10. 从 `vision.md` 的 MVP、Project Mode、Target User、Core Problem、Core Promise、Narrowest Wedge、Direction / Now、Product Principles、Success Signals、Non-goals 和 Open Assumptions 中生成 2-3 个 MVP-first feature candidates，写入 `product-plan.md`
+11. 在 `product-plan.md` 中明确 `MVP Learning Loop`、`Feature Candidate Map`、`Recommended Next Feature`、`Dependency / Sequencing Notes` 和 `Plan Change Log`
+12. 写入 `foundation_gate`，检查 north star clarity、architecture constraints coherence、constitution completeness、decision-log template cleanup、product-plan completeness、placeholder removal、application_root path alignment 与项目层文档矛盾
+13. 验证项目层文件已填写完整，`foundation_gate.status = passed`，`python3 .claude/scripts/bewater-check.py product-plan --project-root .` 通过，且 `product-plan.md` 至少有一个 recommended candidate
+14. 告知用户"初始化完成，请先确认 product-plan.md 中的 Recommended Next Feature；确认后运行 /bewater-goal PC-001 创建第一个功能目标"
 
 **重要说明**：
 - `architecture.md` 是**项目级全局文档**，定义整个项目的技术栈、架构约束、非功能需求
@@ -114,27 +117,21 @@ effort: medium
   "status": "passed|failed|blocked",
   "artifacts": {
     "vision_path": "docs/00-project/vision.md",
+    "product_plan_path": "docs/00-project/product-plan.md",
     "architecture_path": "docs/00-project/architecture.md",
     "constitution_path": "docs/00-project/constitution.md",
     "decision_log_path": "docs/00-project/decision-log.md",
     "foundation_review_path": "docs/00-project/foundation-review.md"
   },
   "gate": {"name": "foundation_gate", "status": "passed|failed|blocked"},
-  "first_slice_candidates": [
-    {
-      "id": "FSC-001",
-      "title": "首个功能候选",
-      "source_basis": ["vision.md MVP", "target user", "success metric"],
-      "user_value": "用户可观察的一步价值",
-      "why_this_should_be_first": "最小价值闭环、风险可控、可快速验证",
-      "risk_note": "主要风险和约束",
-      "recommended": true
-    }
-  ],
-  "recommended_first_slice": "FSC-001",
-  "human_confirmation_required": true,
+  "product_plan": {
+    "recommended_next_candidate": "PC-001",
+    "mvp_learning_loop_defined": true,
+    "human_confirmation_required": true,
+    "next_action": "confirm product-plan recommended candidate -> /bewater-goal PC-001"
+  },
   "blockers": [],
-  "next_action": "confirm-first-slice -> /bewater-goal"
+  "next_action": "confirm product-plan recommended candidate -> /bewater-goal PC-001"
 }
 ```
 

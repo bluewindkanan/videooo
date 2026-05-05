@@ -59,11 +59,26 @@ Use these boundary labels consistently:
 
 This is an autonomous runner. It must not ask the user "should I continue?" between safe BeWater lifecycle steps. This is the no workflow confirmation rule.
 
+## Product Plan Relationship
+
+When there is no active feature and `docs/00-project/product-plan.md` has exactly one recommended candidate, `/bewater-auto` may use that candidate only as input to `/bewater-goal PC-001`.
+
+Automation constraints:
+
+- product-plan candidates are not executable feature specs
+- candidate selection must route through `/bewater-goal`
+- `/bewater-auto` must not skip goal confirmation when required
+- `/bewater-auto` must not skip design, plan, build, validate, or ship precheck gates
+- default automation runs one MVP slice at a time
+- after a slice ships, stop at a product learning point unless the user explicitly asks for another cycle
+
 ## Route Table
 | Current condition | Next automatic route |
 |-------------------|----------------------|
 | `uninitialized` | stop; recommend `/bewater-init` |
-| `initialized` | `/bewater-goal {args}` |
+| `initialized` + args provided | `/bewater-goal {args}` |
+| `initialized` + no args + product-plan has one recommended candidate | `/bewater-goal PC-001` |
+| `initialized` + no args + missing/ambiguous product-plan | stop; recommend `/bewater-next` to repair or choose the product-plan candidate |
 | `specified` | `/bewater-plan` |
 | `planned` + `implementation_mode=greenfield` | `/bewater-build` |
 | `planned` + `implementation_mode=extension` | `/bewater-build` |

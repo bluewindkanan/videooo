@@ -1,0 +1,6 @@
+{
+  "feature_id": "002",
+  "eval_id": "002",
+  "status": "skipped",
+  "reason": "LLM_API_KEY not set"
+}

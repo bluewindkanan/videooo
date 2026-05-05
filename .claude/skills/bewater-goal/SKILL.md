@@ -47,6 +47,33 @@ It must not write `feature.md` from a blank file, free-form Markdown, checklist-
 - A numeric feature id selects or resumes that feature.
 - Args do not replace interaction; goal must still clarify and confirm ambiguous product intent before writing `feature.md`.
 
+## Product Plan Candidate Input
+
+`/bewater-goal` may receive a product-plan candidate ID:
+
+```text
+/bewater-goal PC-001
+```
+
+When args match `PC-xxx`:
+
+1. Read `docs/00-project/product-plan.md`.
+2. Resolve the matching row from `Feature Candidate Map`.
+3. Use the candidate as initial context for Feature Option Framing.
+4. Treat candidate context as not approved scope: candidate context is not approved scope.
+5. Still clarify user outcome, non-goals, key scenarios, risk, split assessment, and selected approach.
+6. Link generated `feature.md` back to the candidate ID and vision section.
+7. Do not treat product-plan candidate text as a replacement for `feature.md` acceptance criteria.
+
+Example user-facing prompt:
+
+```text
+我从 product-plan.md 读取到 PC-001：____。
+它的 MVP 目标是：____。
+我会把它当成候选方向，不当成已确认 scope。
+接下来我会确认用户结果、边界和关键场景，然后生成 feature.md。
+```
+
 ## Human Gate: Goal Confirmation
 - Draft args from `/bewater-auto` are not approved scope.
 - Goal must ask clarifying questions when user intent, non-goals, or key scenarios are ambiguous.

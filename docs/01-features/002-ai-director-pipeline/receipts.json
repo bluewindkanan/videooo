@@ -1,0 +1,178 @@
+{
+  "T001": {
+    "task_id": "T001",
+    "red_command": "python3 -m pytest app/tests/unit/test_llm_adapter.py -x --tb=short",
+    "red_exit_code": 1,
+    "red_failure_marker": "ModuleNotFoundError: No module named 'app.src.skills'",
+    "green_command": "python3 -m pytest app/tests/unit/test_llm_adapter.py -x --tb=short",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m pytest app/tests/unit/test_llm_adapter.py -x --tb=short",
+      "python3 -m pytest app/tests/unit/ -x --tb=short"
+    ],
+    "files_under_test": [
+      "app/src/skills/llm_adapter.py"
+    ],
+    "files_changed": [
+      "app/src/skills/__init__.py",
+      "app/src/skills/llm_adapter.py",
+      "app/tests/unit/test_llm_adapter.py"
+    ],
+    "recorded_at": "2026-05-05T10:40:00Z",
+    "completion_state": "done",
+    "shared_api_changed": false,
+    "type_escape_used": false
+  },
+  "T002": {
+    "task_id": "T002",
+    "red_command": "python3 -m pytest app/tests/unit/test_script_generation.py -x --tb=short",
+    "red_exit_code": 1,
+    "red_failure_marker": "ModuleNotFoundError: No module named 'app.src.skills.script_generation'",
+    "green_command": "python3 -m pytest app/tests/unit/test_script_generation.py -x --tb=short",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m pytest app/tests/unit/test_script_generation.py -x --tb=short",
+      "python3 -m pytest app/tests/unit/ -x --tb=short"
+    ],
+    "files_under_test": [
+      "app/src/skills/script_generation.py",
+      "app/src/workers/step_runner.py"
+    ],
+    "files_changed": [
+      "app/src/skills/script_generation.py",
+      "app/tests/unit/test_script_generation.py",
+      "app/src/workers/step_runner.py",
+      "app/tests/unit/test_step_runner.py"
+    ],
+    "recorded_at": "2026-05-05T10:45:00Z",
+    "completion_state": "done",
+    "shared_api_changed": false,
+    "type_escape_used": false
+  },
+  "T003": {
+    "task_id": "T003",
+    "red_command": "python3 -m pytest app/tests/unit/test_storyboard.py -x --tb=short",
+    "red_exit_code": 1,
+    "red_failure_marker": "ModuleNotFoundError: No module named 'app.src.skills.storyboard'",
+    "green_command": "python3 -m pytest app/tests/unit/test_storyboard.py -x --tb=short",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m pytest app/tests/unit/test_storyboard.py -x --tb=short",
+      "python3 -m pytest app/tests/unit/ -x --tb=short"
+    ],
+    "files_under_test": [
+      "app/src/skills/storyboard.py",
+      "app/src/server/routes/video_tasks.py"
+    ],
+    "files_changed": [
+      "app/src/skills/storyboard.py",
+      "app/tests/unit/test_storyboard.py",
+      "app/src/server/routes/video_tasks.py"
+    ],
+    "recorded_at": "2026-05-05T10:45:00Z",
+    "completion_state": "done",
+    "shared_api_changed": false,
+    "type_escape_used": false
+  },
+  "T004": {
+    "task_id": "T004",
+    "red_command": "python3 -m pytest app/tests/unit/test_review_script.py -x --tb=short",
+    "red_exit_code": 2,
+    "red_failure_marker": "ModuleNotFoundError: No module named 'app.src.skills.review_script'",
+    "green_command": "python3 -m pytest app/tests/unit/test_review_script.py -x --tb=short",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m pytest app/tests/unit/test_review_script.py -x --tb=short",
+      "python3 -m pytest app/tests/unit/test_review_script.py --cov=app.src.skills.review_script --cov-report=term-missing"
+    ],
+    "files_under_test": [
+      "app/src/skills/review_script.py"
+    ],
+    "files_changed": [
+      "app/src/skills/review_script.py",
+      "app/tests/unit/test_review_script.py"
+    ],
+    "recorded_at": "2026-05-05T12:00:00Z",
+    "completion_state": "done",
+    "shared_api_changed": false,
+    "type_escape_used": false
+  },
+  "T005": {
+    "task_id": "T005",
+    "red_command": "python3 -m pytest app/tests/unit/test_task_list.py -x --tb=short",
+    "red_exit_code": 1,
+    "red_failure_marker": "ImportError or 404 for new endpoints",
+    "green_command": "python3 -m pytest app/tests/unit/test_task_list.py -x --tb=short",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m pytest app/tests/unit/test_task_list.py -x --tb=short",
+      "python3 -m pytest app/tests/unit/ -x --tb=short"
+    ],
+    "files_under_test": [
+      "app/src/storage/sqlite.py",
+      "app/src/server/routes/video_tasks.py",
+      "app/src/server/schemas.py"
+    ],
+    "files_changed": [
+      "app/src/storage/sqlite.py",
+      "app/src/server/schemas.py",
+      "app/src/server/routes/video_tasks.py",
+      "app/src/web/workbench.html",
+      "app/src/web/workbench.js",
+      "app/tests/unit/test_task_list.py"
+    ],
+    "recorded_at": "2026-05-05T10:55:00Z",
+    "completion_state": "done",
+    "shared_api_changed": false,
+    "type_escape_used": false
+  },
+  "T006": {
+    "task_id": "T006",
+    "red_command": "python3 -m pytest app/tests/integration/test_api_video_tasks.py -x --tb=short",
+    "red_exit_code": 0,
+    "red_failure_marker": "N/A — extending existing tests",
+    "green_command": "python3 -m pytest app/tests/integration/test_api_video_tasks.py -x --tb=short",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "python3 -m pytest app/tests/integration/test_api_video_tasks.py -x --tb=short",
+      "python3 -m pytest app/tests/ -x --tb=short"
+    ],
+    "files_under_test": [
+      "app/src/server/routes/video_tasks.py",
+      "app/src/workers/step_runner.py",
+      "app/src/skills/"
+    ],
+    "files_changed": [
+      "app/tests/integration/test_api_video_tasks.py"
+    ],
+    "recorded_at": "2026-05-05T11:05:00Z",
+    "completion_state": "done",
+    "shared_api_changed": false,
+    "type_escape_used": false
+  },
+  "T007": {
+    "task_id": "T007",
+    "red_command": "bash app/tests/blackbox/video_task_smoke.sh",
+    "red_exit_code": 0,
+    "red_failure_marker": "N/A — extending existing smoke test",
+    "green_command": "bash app/tests/blackbox/video_task_smoke.sh",
+    "green_exit_code": 0,
+    "verify_commands": [
+      "bash app/tests/blackbox/video_task_smoke.sh",
+      "python3 app/evals/run_002.py",
+      "curl -sf http://localhost:8000/api/video-tasks | python3 -m json.tool"
+    ],
+    "files_under_test": [
+      "app/tests/blackbox/video_task_smoke.sh"
+    ],
+    "files_changed": [
+      "app/tests/blackbox/video_task_smoke.sh",
+      "app/evals/002/golden.jsonl",
+      "app/evals/run_002.py"
+    ],
+    "recorded_at": "2026-05-05T11:05:00Z",
+    "completion_state": "done_with_concerns",
+    "shared_api_changed": false,
+    "type_escape_used": false
+  }
+}

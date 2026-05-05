@@ -136,6 +136,36 @@ def list_items(value: object) -> list[dict[str, object]]:
 
 ALLOWED_LIFECYCLE_STATUS = {"active", "superseded", "partially_superseded", "unknown"}
 
+ALLOWED_PRODUCT_PLAN_STATUS = {
+    "candidate",
+    "recommended",
+    "in_goal",
+    "active_feature",
+    "shipped",
+    "blocked",
+    "superseded",
+}
+ALLOWED_PRODUCT_PLAN_PRIORITY = {"P1", "P2", "P3"}
+PRODUCT_PLAN_REQUIRED_SECTIONS = (
+    "Planning Intent",
+    "MVP Learning Loop",
+    "Feature Candidate Map",
+    "Recommended Next Feature",
+    "Dependency / Sequencing Notes",
+    "Not Yet Ready Candidates",
+    "Completed / Superseded Candidates",
+)
+TASK_LEVEL_LEAKAGE_MARKERS = (
+    "Execution Block",
+    "RED command",
+    "GREEN target",
+    "Verify commands",
+    "Modify:",
+    "Test:",
+    "E2E Test:",
+    "receipts.json#T",
+)
+
 
 def implementation_paths(value: object) -> list[str]:
     if not isinstance(value, list):
@@ -238,14 +268,61 @@ def has_formal_e2e_command(text: str) -> bool:
 
 
 def markdown_section(text: str, heading: str) -> str:
-    match = re.search(rf"(?im)^\s*#+\s+{re.escape(heading)}\s*$", text)
+    match = re.search(rf"(?im)^\s*(#+)\s+{re.escape(heading)}\s*$", text)
     if not match:
         return ""
+    level = len(match.group(1))
     section = text[match.end():]
-    next_heading = re.search(r"(?m)^\s*#+\s+", section)
+    next_heading = re.search(rf"(?m)^\s*#{{1,{level}}}\s+", section)
     if next_heading:
         section = section[: next_heading.start()]
     return section
+
+
+def product_plan_candidate_rows(text: str) -> list[dict[str, str]]:
+    section = markdown_section(text, "Feature Candidate Map")
+    rows: list[dict[str, str]] = []
+    for line in section.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|") or "---" in stripped:
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if len(cells) < 11 or cells[0] == "ID" or not re.fullmatch(r"PC-\d{3}", cells[0]):
+            continue
+        rows.append(
+            {
+                "id": cells[0],
+                "title": cells[1],
+                "user_value": cells[2],
+                "vision_link": cells[3],
+                "mvp_role": cells[4],
+                "observable_effect": cells[5],
+                "feedback_value": cells[6],
+                "priority": cells[7],
+                "status": cells[8],
+                "why_now": cells[9],
+                "risk": cells[10],
+            }
+        )
+    return rows
+
+
+def recommended_product_plan_candidate_id(text: str) -> str | None:
+    section = markdown_section(text, "Recommended Next Feature")
+    match = re.search(r"(?mi)^-\s*candidate_id:\s*(PC-\d{3})\s*$", section)
+    return match.group(1) if match else None
+
+
+def has_date_based_commitment(text: str) -> bool:
+    date_patterns = (
+        r"\bby\s+20\d{2}-\d{2}-\d{2}\b",
+        r"\bby\s+Q[1-4]\b",
+        r"\bQ[1-4]\s+20\d{2}\b",
+        r"\b20\d{2}-\d{2}-\d{2}\s*(?:ship|release|launch|上线|发布)",
+        r"(?:ship|release|launch|上线|发布)\s+(?:by|before|在|于)\s*20\d{2}-\d{2}-\d{2}",
+    )
+    lower = text.lower()
+    return any(re.search(pattern, lower, flags=re.IGNORECASE) for pattern in date_patterns)
 
 
 def e2e_strategy_rows(design_text: str) -> dict[str, dict[str, str]]:
@@ -551,6 +628,62 @@ def check_root(args: argparse.Namespace) -> list[str]:
     return errors
 
 
+def check_product_plan(args: argparse.Namespace) -> list[str]:
+    project_root = Path(getattr(args, "project_root", ".") or ".")
+    plan_path = (
+        Path(args.product_plan)
+        if getattr(args, "product_plan", None)
+        else project_root / "docs" / "00-project" / "product-plan.md"
+    )
+    if not plan_path.exists():
+        return ["missing docs/00-project/product-plan.md"]
+
+    text = plan_path.read_text(encoding="utf-8")
+    errors: list[str] = []
+
+    for heading in PRODUCT_PLAN_REQUIRED_SECTIONS:
+        if not markdown_section(text, heading).strip():
+            errors.append(f"product-plan.md missing required section: {heading}")
+
+    candidates = product_plan_candidate_rows(text)
+    if not candidates:
+        errors.append("product-plan.md missing Feature Candidate Map rows")
+        return errors
+
+    recommended = [row for row in candidates if row["status"].strip().lower() == "recommended"]
+    if len(recommended) != 1:
+        errors.append("product-plan.md must have exactly one recommended candidate")
+    recommended_id = recommended_product_plan_candidate_id(text)
+    if not recommended_id:
+        errors.append("product-plan.md missing Recommended Next Feature candidate_id")
+    elif len(recommended) == 1 and recommended[0]["id"] != recommended_id:
+        errors.append("product-plan.md recommended candidate_id must match Feature Candidate Map")
+
+    for row in candidates:
+        cid = row["id"].strip()
+        priority = row["priority"].strip()
+        status = row["status"].strip()
+        if priority and priority not in ALLOWED_PRODUCT_PLAN_PRIORITY:
+            errors.append(f"{cid} priority must be P1|P2|P3")
+        if status and status not in ALLOWED_PRODUCT_PLAN_STATUS:
+            errors.append(
+                f"{cid} status must be candidate|recommended|in_goal|active_feature|shipped|blocked|superseded"
+            )
+        if not row["mvp_role"].strip():
+            errors.append(f"{cid} missing MVP role")
+        if not row["observable_effect"].strip():
+            errors.append(f"{cid} missing observable effect")
+
+    if has_date_based_commitment(text):
+        errors.append("product-plan.md must not contain date-based roadmap commitments")
+
+    lower = text.lower()
+    if any(marker.lower() in lower for marker in TASK_LEVEL_LEAKAGE_MARKERS):
+        errors.append("product-plan.md must not contain task-level execution details")
+
+    return errors
+
+
 def add_common_flags(command: argparse.ArgumentParser) -> None:
     command.add_argument("--warn-only", action="store_true", help="Report drift without failing.")
     command.add_argument("--migrate", action="store_true", help="Print migration hints without rewriting files.")
@@ -577,6 +710,10 @@ def main() -> int:
     root_cmd = sub.add_parser("root")
     root_cmd.add_argument("--project-root", required=True)
     add_common_flags(root_cmd)
+    product_plan = sub.add_parser("product-plan")
+    product_plan.add_argument("--project-root", default=".")
+    product_plan.add_argument("--product-plan")
+    add_common_flags(product_plan)
 
     args = parser.parse_args()
     handlers = {
@@ -584,6 +721,7 @@ def main() -> int:
         "design": check_design,
         "plan": check_plan,
         "root": check_root,
+        "product-plan": check_product_plan,
     }
     errors = handlers[args.command](args)
     if errors:

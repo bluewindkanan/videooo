@@ -6,5 +6,6 @@
   "workflow_doc": "WORKFLOW.md",
   "readme_doc": "README.md",
   "app_readme_doc": "app/README.md",
-  "doctor_script": ".claude/scripts/bewater-doctor.sh"
+  "doctor_script": ".claude/scripts/bewater-doctor.sh",
+  "updated_at": "2026-05-05T11:07:40Z"
 }

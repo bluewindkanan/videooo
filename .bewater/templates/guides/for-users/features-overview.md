@@ -11,6 +11,16 @@
 - `docs/02-learning/`
   - 项目级知识沉淀（patterns、anti-patterns、retrospective）
 
+## 从 Vision 到 Feature
+
+BeWater 不要求用户凭空提出第一个 feature。初始化后先看：
+
+```text
+docs/00-project/product-plan.md
+```
+
+`product-plan.md` 会给出 MVP-first feature candidates 和 `Recommended Next Feature`。用户确认后，再用 `/bewater-goal PC-001` 把 candidate 展开成正式 `feature.md`。
+
 ## 命令职责
 
 Public path: `goal -> plan -> build -> validate -> ship`

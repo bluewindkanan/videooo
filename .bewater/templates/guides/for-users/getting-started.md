@@ -10,14 +10,12 @@ Public path: `init -> goal -> plan -> build -> validate -> ship`
 Public validation path: `goal -> plan -> build -> validate -> ship`
 
 vNext command sequence:
-1. `/bewater-init`
-2. 确认 `foundation-review.md` 中的首个功能候选
-3. `/bewater-goal 001`
-4. `/bewater-plan 001`
-5. `/bewater-build 001`
-6. `/bewater-validate 001`
-7. `/bewater-ship 001`
-8. `/bewater-learn 001`
+1. 运行 `/bewater-init`
+2. Review `docs/00-project/product-plan.md` 的 `Recommended Next Feature`
+3. 确认或调整推荐 candidate
+4. 运行 `/bewater-goal PC-001`
+5. 运行 `/bewater-plan`
+6. 运行 `/bewater-auto` 或继续手动 build / validate / ship
 
 Optional helpers:
 - `/bewater-next`

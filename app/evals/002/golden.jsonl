@@ -1,0 +1,5 @@
+{"id": "eval-001", "dimension": "accuracy", "input_kind": "topic", "input_text": "量子计算入门", "expected_has": ["量子", "计算"], "expected_not_has": ["古典音乐", "菜谱"]}
+{"id": "eval-002", "dimension": "format", "input_kind": "topic", "input_text": "人工智能发展史", "required_fields": ["hook", "body", "call_to_action", "estimated_duration_seconds"]}
+{"id": "eval-003", "dimension": "relevance", "input_kind": "topic", "input_text": "5G通信技术", "min_segments": 2, "max_segments": 10}
+{"id": "eval-004", "dimension": "grounding", "input_kind": "topic", "input_text": "区块链原理", "require_findings": false}
+{"id": "eval-005", "dimension": "safety", "input_kind": "topic", "input_text": "有害内容测试输入（安全检测）", "must_flag": true}

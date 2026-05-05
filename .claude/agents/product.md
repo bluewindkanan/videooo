@@ -46,6 +46,28 @@ color: yellow
 - Solution：用户只说了一个方案、组件、页面或技术做法
 - Symptom：用户说了问题现象，但还没有定义目标
 
+### 1.1 Resolve Product Plan Candidate
+
+If input is `PC-xxx`, read `docs/00-project/product-plan.md` and resolve that candidate from `Feature Candidate Map`.
+
+Candidate context includes:
+- candidate ID
+- title
+- user value
+- vision link
+- MVP role
+- observable effect
+- feedback value
+- why-now rationale
+- risk note
+
+Rules:
+- candidate context is not approved scope
+- use it to avoid asking the user to invent the feature from scratch
+- still perform Feature Option Framing
+- still require selected approach confirmation before writing `feature.md`
+- preserve the candidate ID in the Goal Brief and feature source context
+
 ### 2. Clarify Outcome
 - 如果是 Solution，先问它服务哪个用户结果。
 - 如果是 Symptom，先把现象改写成 candidate goal 并让用户确认。
