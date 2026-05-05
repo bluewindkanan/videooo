@@ -26,5 +26,4 @@ released_at: 2026-05-05T09:39:01Z
 
 - local-record:
   - release_record: written
-  - commit: pending (filled after commit)
-
+  - commit: c6cb5d51a0cbeb9fc3e8236aad341136e9250a20
