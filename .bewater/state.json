@@ -1,7 +1,7 @@
 {
   "version": "4.0.0",
   "methodology_version": "4.0.0",
-  "current_state": "building",
+  "current_state": "shipped",
   "previous_state": "initialized",
   "project": "视频自动化生产平台",
   "current_feature": "001",
@@ -10,13 +10,13 @@
     "implementation_mode": "greenfield",
     "existing_implementation_note": null
   },
-  "ready_for_build": true,
+  "ready_for_build": false,
   "shipped_features": [],
   "initialized_at": "2026-05-05T05:53:47Z",
   "specified_at": "2026-05-05T08:46:25Z",
   "planned_at": "2026-05-05T08:58:10Z",
   "building_at": "2026-05-05T09:05:10Z",
-  "shipped_at": null,
+  "shipped_at": "2026-05-05T09:41:53Z",
   "learned_at": null,
   "internal_stage": "implementing",
   "artifacts": {
@@ -27,7 +27,7 @@
     "tasks_path": "docs/01-features/001-knowledge-task-skeleton/tasks.md",
     "review_note_path": "docs/01-features/001-knowledge-task-skeleton/review-note.md",
     "validation_report_path": "docs/01-features/001-knowledge-task-skeleton/validation-report.md",
-    "release_record_path": null,
+    "release_record_path": "docs/01-features/001-knowledge-task-skeleton/release-record.md",
     "validation_evidence_index_path": null,
     "tdd_receipts_dir": null
   },
@@ -183,20 +183,23 @@
       ]
     },
     "ship_precheck_gate": {
-      "status": "pending",
+      "status": "go",
       "freshness": {
-        "status": "unknown",
-        "checked_at": null,
+        "status": "fresh",
+        "checked_at": "2026-05-05T09:41:53Z",
         "stale_reasons": []
       },
       "concerns": [],
       "blockers": [],
-      "evaluated_at": null,
+      "evaluated_at": "2026-05-05T09:41:53Z",
       "evaluated_commit_sha": null,
       "input_digest": "",
       "produced_by": "ship-flow",
-      "evidence_refs": [],
-      "evidence_checked": false
+      "evidence_refs": [
+        "docs/01-features/001-knowledge-task-skeleton/validation-report.md",
+        "docs/01-features/001-knowledge-task-skeleton/release-record.md"
+      ],
+      "evidence_checked": true
     }
   },
   "runtime": {
@@ -251,7 +254,14 @@
       "command": "/bewater-plan",
       "at": "2026-05-05T08:58:10Z",
       "evidence": "docs/01-features/001-knowledge-task-skeleton/prebuild-review.md"
+    },
+    {
+      "from": "building",
+      "to": "shipped",
+      "command": "/bewater-ship",
+      "at": "2026-05-05T09:41:53Z",
+      "evidence": "docs/01-features/001-knowledge-task-skeleton/release-record.md"
     }
   ],
-  "next_command": "/bewater-ship"
+  "next_command": "/bewater-learn"
 }
