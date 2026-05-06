@@ -1,0 +1,19 @@
+{
+  "task_id": "T003",
+  "red_command": "python3 -m pytest app/tests/unit/test_material_extract.py -x -q",
+  "red_exit_code": 1,
+  "red_failure_marker": "ModuleNotFoundError: No module named 'app.src.skills.material_extract'",
+  "green_command": "python3 -m pytest app/tests/unit/test_material_extract.py -x -q",
+  "green_exit_code": 0,
+  "verify_commands": ["python3 -m pytest app/tests/unit/ -x -q"],
+  "files_under_test": [
+    "app/src/skills/material_extract.py",
+    "app/src/workers/step_runner.py"
+  ],
+  "files_changed": [
+    "app/src/skills/material_extract.py",
+    "app/src/workers/step_runner.py",
+    "app/tests/unit/test_material_extract.py"
+  ],
+  "recorded_at": "2026-05-05T18:00:00Z"
+}

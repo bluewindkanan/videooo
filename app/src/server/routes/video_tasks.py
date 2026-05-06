@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse
 
 from app.src.domain.models import ArtifactType, StepStatus, TaskStatus
 from app.src.server.schemas import (
@@ -25,7 +26,10 @@ from app.src.server.schemas import (
 router = APIRouter(prefix="/api/video-tasks", tags=["video-tasks"])
 
 
-DEFAULT_STEP_KEYS = ["material_fetch", "script_generation", "storyboard", "review_script"]
+DEFAULT_STEP_KEYS = [
+    "material_fetch", "script_generation", "storyboard", "review_script",
+    "voiceover", "material_extract", "material_match", "subtitle", "video_compose",
+]
 
 
 @router.post("", response_model=CreateVideoTaskResponse)
@@ -63,7 +67,7 @@ def create_video_task(req: Request, body: CreateVideoTaskRequest) -> CreateVideo
     # Check if material_fetch blocked the pipeline
     task = store.get_task(task.id)
     if task and task.status != TaskStatus.waiting_for_material:
-        for step_key in ["script_generation", "storyboard", "review_script"]:
+        for step_key in DEFAULT_STEP_KEYS[1:]:
             runner.run_step(task_id=task.id, step_key=step_key)
 
     return CreateVideoTaskResponse(task_id=task.id)
@@ -196,11 +200,44 @@ def get_artifact_content(req: Request, task_id: str, artifact_id: str) -> Artifa
             content={"note": "binary_file", "storage_ref": str(file_path), "file_size": file_path.stat().st_size},
         )
 
+    # SRT subtitle files: read as text and return content
+    if file_path.suffix.lower() == ".srt":
+        srt_text = file_path.read_text(encoding="utf-8")
+        return ArtifactContentResponse(
+            artifact_id=artifact.id,
+            content={"content": srt_text},
+        )
+
     content = json.loads(file_path.read_text(encoding="utf-8"))
     return ArtifactContentResponse(
         artifact_id=artifact.id,
         content=content,
     )
+
+
+@router.get("/{task_id}/artifacts/{artifact_id}/file")
+def serve_artifact_file(req: Request, task_id: str, artifact_id: str):
+    """Serve binary artifact files (video, audio) for preview/download."""
+    store = req.app.state.store
+    task = store.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="task_not_found")
+    artifact = store.get_artifact(task_id, artifact_id)
+    if not artifact:
+        raise HTTPException(status_code=404, detail="artifact_not_found")
+    file_path = Path(artifact.storage_ref)
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="artifact_file_not_found")
+
+    content_types = {
+        ".mp4": "video/mp4",
+        ".mov": "video/quicktime",
+        ".avi": "video/x-msvideo",
+        ".mp3": "audio/mpeg",
+        ".wav": "audio/wav",
+    }
+    content_type = content_types.get(file_path.suffix.lower(), "application/octet-stream")
+    return FileResponse(file_path, media_type=content_type, filename=file_path.name)
 
 
 _ALLOWED_UPLOAD_EXTENSIONS = {".mp4", ".mov", ".avi"}
@@ -260,7 +297,8 @@ async def upload_material(
     from app.src.workers.step_runner import StepRunner
 
     runner = StepRunner(store=store, artifact_store=artifact_store)
-    for step_key in ["script_generation", "storyboard", "review_script"]:
+    remaining_steps = DEFAULT_STEP_KEYS[1:]
+    for step_key in remaining_steps:
         runner.run_step(task_id=task_id, step_key=step_key)
 
     return UploadMaterialResponse(accepted=True, filename=filename, artifact_id=ref.storage_ref)

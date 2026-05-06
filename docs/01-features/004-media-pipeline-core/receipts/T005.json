@@ -1,0 +1,62 @@
+{
+  "task_id": "T005",
+  "red_command": "python3 -m pytest app/tests/unit/test_subtitle.py -x -q",
+  "red_exit_code": 1,
+  "red_failure_marker": "ModuleNotFoundError: No module named 'app.src.skills.subtitle'",
+  "green_command": "python3 -m pytest app/tests/unit/test_subtitle.py app/tests/unit/test_step_runner.py -x -q",
+  "green_exit_code": 0,
+  "verify_commands": [
+    "python3 -m pytest app/tests/unit/ -x -q --ignore=app/tests/unit/test_material_match.py"
+  ],
+  "files_under_test": [
+    "app/src/skills/subtitle.py",
+    "app/src/workers/step_runner.py"
+  ],
+  "files_changed": [
+    "app/src/skills/subtitle.py",
+    "app/src/workers/step_runner.py",
+    "app/tests/unit/test_subtitle.py"
+  ],
+  "tests": [
+    {
+      "name": "test_subtitle_basic",
+      "description": "3 segments with word_boundaries produce correct SRT entries and entry count"
+    },
+    {
+      "name": "test_subtitle_empty_timing",
+      "description": "Empty segments produce empty SRT content"
+    },
+    {
+      "name": "test_subtitle_no_word_boundaries",
+      "description": "Segments without word_boundaries use duration_seconds for timing fallback"
+    },
+    {
+      "name": "test_subtitle_long_segment_split",
+      "description": "Segment with duration > 10s is split into 2 SRT entries at midpoint word boundary"
+    },
+    {
+      "name": "test_subtitle_srt_format",
+      "description": "Verify exact SRT timestamp format HH:MM:SS,mmm via ms_to_srt conversions"
+    },
+    {
+      "name": "test_subtitle_file_written",
+      "description": "Verify .srt file is written to artifact store with correct extension"
+    },
+    {
+      "name": "test_step_runner_subtitle",
+      "description": "StepRunner._run_subtitle dispatch: read voiceover_timing artifact, call skill, register subtitle + metadata artifacts"
+    },
+    {
+      "name": "test_step_runner_subtitle_skill_registered",
+      "description": "Verify 'subtitle' is in STEP_SKILLS registry and maps to run_subtitle"
+    },
+    {
+      "name": "test_subtitle_global_offset_accumulates",
+      "description": "Timestamps accumulate global offset from previous segment durations"
+    }
+  ],
+  "pre_existing_failures": [
+    "test_material_match.py::TestMatchBasic::test_match_basic — T004 pre-existing, unrelated to T005"
+  ],
+  "recorded_at": "2026-05-05T19:00:00Z"
+}

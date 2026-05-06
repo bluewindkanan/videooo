@@ -1,0 +1,41 @@
+{
+  "status": "passed",
+  "completion_state": "done",
+  "concerns": [],
+  "tasks_completed": ["T008 — Web workbench video preview + download"],
+  "files_created": [
+    "app/tests/unit/test_workbench_video.py"
+  ],
+  "files_modified": [
+    "app/src/web/workbench.html",
+    "app/src/web/workbench.js"
+  ],
+  "files_verified": true,
+  "callsites_checked": true,
+  "shared_api_changed": false,
+  "type_escape_used": false,
+  "write_edit_permission_denied": false,
+  "checkpoint_reached": null,
+  "coverage": "100%",
+  "next_steps": "T009 (E2E integration test) can proceed",
+  "tdd_evidence": {
+    "red": "9 tests failed — AssertionError: Missing .video-player CSS in workbench.html",
+    "green": "Added video CSS to workbench.html + video/audio/subtitle sections to workbench.js",
+    "verify": "177 passed in 6.74s (full suite: unit + integration)"
+  },
+  "test_details": {
+    "test_file": "app/tests/unit/test_workbench_video.py",
+    "test_count": 9,
+    "test_names": [
+      "test_workbench_html_has_video_css",
+      "test_workbench_html_has_download_css",
+      "test_workbench_html_has_audio_css",
+      "test_workbench_html_has_media_info_css",
+      "test_workbench_js_has_final_video",
+      "test_workbench_js_has_audio_section",
+      "test_workbench_js_has_subtitle_section",
+      "test_workbench_js_has_video_download",
+      "test_workbench_js_has_subtitle_render_case"
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "task_id": "T002",
+  "red_command": "python3 -m pytest app/tests/unit/test_voiceover.py -x -q",
+  "red_exit_code": 1,
+  "red_failure_marker": "ModuleNotFoundError: No module named 'app.src.skills.voiceover'",
+  "green_command": "python3 -m pytest app/tests/unit/test_voiceover.py app/tests/unit/test_step_runner.py -x -q",
+  "green_exit_code": 0,
+  "verify_commands": [
+    "python3 -m pytest app/tests/unit/ -x -q --ignore=app/tests/unit/test_material_extract.py"
+  ],
+  "files_under_test": [
+    "app/src/skills/voiceover.py",
+    "app/src/workers/step_runner.py"
+  ],
+  "files_changed": [
+    "app/src/skills/voiceover.py",
+    "app/src/workers/step_runner.py",
+    "app/tests/unit/test_voiceover.py"
+  ],
+  "tests": [
+    {
+      "name": "test_run_voiceover_basic",
+      "description": "2 segments, verify timing_data structure, audio artifacts written"
+    },
+    {
+      "name": "test_run_voiceover_empty_segments",
+      "description": "Empty list raises VoiceoverError"
+    },
+    {
+      "name": "test_run_voiceover_concat_calls_ffmpeg",
+      "description": "Verify FFmpeg concat demuxer is called for full audio"
+    },
+    {
+      "name": "test_run_voiceover_word_boundaries",
+      "description": "Verify word_boundaries captured correctly from edge-tts WordBoundary events"
+    },
+    {
+      "name": "test_step_runner_voiceover",
+      "description": "StepRunner._run_voiceover dispatch: read storyboard artifact, call skill, register audio artifacts"
+    },
+    {
+      "name": "test_step_runner_voiceover_skill_registered",
+      "description": "Verify voiceover is in STEP_SKILLS registry and maps to run_voiceover"
+    },
+    {
+      "name": "test_voiceover_error_is_exception",
+      "description": "VoiceoverError is a proper Exception subclass"
+    },
+    {
+      "name": "test_default_voice_is_xiaoxiao",
+      "description": "Default TTS voice is zh-CN-XiaoxiaoNeural, configurable via VIDEOOO_TTS_VOICE env var"
+    }
+  ],
+  "recorded_at": "2026-05-05T18:00:00Z"
+}

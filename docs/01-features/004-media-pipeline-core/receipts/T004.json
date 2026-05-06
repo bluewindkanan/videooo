@@ -1,0 +1,36 @@
+{
+  "task_id": "T004",
+  "red_command": "python3 -m pytest app/tests/unit/test_material_match.py -x -q",
+  "red_exit_code": 1,
+  "red_failure_marker": "ModuleNotFoundError: No module named 'app.src.skills.material_match'",
+  "green_command": "python3 -m pytest app/tests/unit/test_material_match.py -x -q",
+  "green_exit_code": 0,
+  "verify_commands": ["python3 -m pytest app/tests/unit/ -x -q"],
+  "verify_exit_code": 0,
+  "verify_test_count": 138,
+  "files_under_test": [
+    "app/src/skills/material_match.py",
+    "app/src/workers/step_runner.py"
+  ],
+  "files_created": [
+    "app/src/skills/material_match.py",
+    "app/tests/unit/test_material_match.py"
+  ],
+  "files_modified": [
+    "app/src/workers/step_runner.py"
+  ],
+  "test_cases": [
+    "test_match_basic",
+    "test_match_empty_clips_fallback",
+    "test_match_clip_looping",
+    "test_match_single_clip",
+    "test_match_exact_duration",
+    "test_step_runner_material_match",
+    "test_step_runner_material_match_skill_registered",
+    "test_match_no_voiceover_timing"
+  ],
+  "callsites_checked": true,
+  "shared_api_changed": false,
+  "type_escape_used": false,
+  "recorded_at": "2026-05-05T19:00:00Z"
+}

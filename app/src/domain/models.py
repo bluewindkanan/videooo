@@ -33,6 +33,10 @@ class ArtifactType(str, Enum):
     source_video = "source_video"
     uploaded_video = "uploaded_video"
     material_status = "material_status"
+    audio = "audio"
+    clip = "clip"
+    subtitle = "subtitle"
+    final_video = "final_video"
 
 
 @dataclass(frozen=True)

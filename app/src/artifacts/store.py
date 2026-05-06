@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any
 
 
-ALLOWED_EXTENSIONS = {".mp4", ".mov", ".avi"}
-_VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".bin"}
+ALLOWED_EXTENSIONS = {".mp4", ".mov", ".avi", ".mp3", ".wav", ".srt"}
+_MEDIA_EXTENSIONS = {".mp4", ".mov", ".avi", ".bin", ".mp3", ".srt"}
 
 
 @dataclass(frozen=True)
@@ -81,7 +81,7 @@ class ArtifactStore:
     def list_task_artifacts(self, task_id: str) -> list[ArtifactRef]:
         d = self.task_dir(task_id)
         refs: list[ArtifactRef] = []
-        patterns = ["*.json"] + [f"*{ext}" for ext in _VIDEO_EXTENSIONS]
+        patterns = ["*.json"] + [f"*{ext}" for ext in _MEDIA_EXTENSIONS]
         seen: set[Path] = set()
         for pattern in patterns:
             for p in sorted(d.glob(pattern)):

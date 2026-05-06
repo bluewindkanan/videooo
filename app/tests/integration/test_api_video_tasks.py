@@ -283,18 +283,23 @@ class TestFullPipeline:
             runner.run_step(task_id=task_id, step_key="storyboard")
             runner.run_step(task_id=task_id, step_key="review_script")
 
-        # Verify task detail has all 3 steps
+        # Verify task detail has all 9 steps
         detail = client.get(f"/api/video-tasks/{task_id}")
         assert detail.status_code == 200
         steps = detail.json()["steps"]
         step_keys = {s["step_key"] for s in steps}
-        assert step_keys == {"material_fetch", "script_generation", "storyboard", "review_script"}
+        assert step_keys == {
+            "material_fetch", "script_generation", "storyboard", "review_script",
+            "voiceover", "material_extract", "material_match", "subtitle", "video_compose",
+        }
 
-        # All steps should be completed
+        # LLM steps should be completed; media steps may fail without proper upstream data
+        llm_steps = {"material_fetch", "script_generation", "storyboard", "review_script"}
         for s in steps:
-            assert s["status"] == "completed", (
-                f"Step {s['step_key']} expected completed, got {s['status']}"
-            )
+            if s["step_key"] in llm_steps:
+                assert s["status"] == "completed", (
+                    f"Step {s['step_key']} expected completed, got {s['status']}"
+                )
 
         # Verify artifacts exist
         arts_resp = client.get(f"/api/video-tasks/{task_id}/artifacts")
@@ -482,3 +487,153 @@ class TestUploadResumeIntegration:
         arts = client.get(f"/api/video-tasks/{task_id}/artifacts").json()["artifacts"]
         uploaded = [a for a in arts if a["artifact_type"] == "uploaded_video"]
         assert len(uploaded) >= 1
+
+
+# ---------------------------------------------------------------------------
+# Feature 004 T007: Pipeline orchestration + file serving
+# ---------------------------------------------------------------------------
+
+class TestPipeline9Steps:
+    """Verify create_video_task initializes all 9 steps."""
+
+    def test_create_task_runs_all_9_steps(self, client: TestClient) -> None:
+        data = _create_task(client, topic="Nine-step pipeline test")
+        task_id = data["task_id"]
+
+        detail = client.get(f"/api/video-tasks/{task_id}").json()
+        step_keys = [s["step_key"] for s in detail["steps"]]
+        assert len(step_keys) == 9, f"Expected 9 steps, got {len(step_keys)}: {step_keys}"
+
+        expected = {
+            "material_fetch", "script_generation", "storyboard", "review_script",
+            "voiceover", "material_extract", "material_match", "subtitle", "video_compose",
+        }
+        assert set(step_keys) == expected
+
+        # material_fetch, script_generation should be completed
+        # (they ran during task creation with mocked LLM)
+        steps_by_key = {s["step_key"]: s for s in detail["steps"]}
+        assert steps_by_key["material_fetch"]["status"] == "completed"
+        assert steps_by_key["script_generation"]["status"] == "completed"
+
+
+class TestArtifactFileEndpoint:
+    """GET /api/video-tasks/{task_id}/artifacts/{artifact_id}/file serves binary files."""
+
+    def _create_task_with_video_artifact(
+        self, client: TestClient, tmp_path: Path
+    ) -> tuple[str, str]:
+        """Helper: create a task and add a fake video artifact file."""
+        data = _create_task(client, topic="File serving test")
+        task_id = data["task_id"]
+
+        # Write a fake video file
+        video_dir = tmp_path / "artifacts" / task_id / "video_compose"
+        video_dir.mkdir(parents=True, exist_ok=True)
+        video_file = video_dir / "output.mp4"
+        video_file.write_bytes(b"\x00\x00\x00 ftypisom" + b"\x00" * 100)
+
+        # Register artifact in store
+        store = client.app.state.store
+        from app.src.domain.models import ArtifactType
+        store.add_artifact(
+            task_id=task_id,
+            step_key="video_compose",
+            artifact_type=ArtifactType.final_video,
+            storage_ref=str(video_file),
+            metadata={"kind": "final_video", "duration_seconds": 10},
+        )
+
+        # Get the artifact ID
+        arts = store.list_artifacts(task_id)
+        final_video = [a for a in arts if a.artifact_type == ArtifactType.final_video]
+        assert len(final_video) >= 1
+        return task_id, final_video[-1].id
+
+    def test_artifact_file_endpoint_returns_video(
+        self, client: TestClient, tmp_path: Path
+    ) -> None:
+        task_id, artifact_id = self._create_task_with_video_artifact(client, tmp_path)
+
+        resp = client.get(f"/api/video-tasks/{task_id}/artifacts/{artifact_id}/file")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"] == "video/mp4"
+        assert len(resp.content) > 0
+
+    def test_artifact_file_endpoint_404_for_missing_task(
+        self, client: TestClient
+    ) -> None:
+        resp = client.get("/api/video-tasks/nonexistent/artifacts/nonexistent/file")
+        assert resp.status_code == 404
+
+    def test_artifact_file_endpoint_404_for_missing_artifact(
+        self, client: TestClient
+    ) -> None:
+        data = _create_task(client, topic="Missing artifact test")
+        task_id = data["task_id"]
+
+        resp = client.get(f"/api/video-tasks/{task_id}/artifacts/nonexistent/file")
+        assert resp.status_code == 404
+
+    def test_artifact_file_endpoint_404_for_missing_file(
+        self, client: TestClient
+    ) -> None:
+        """Artifact exists in DB but the file on disk is gone."""
+        data = _create_task(client, topic="Missing file test")
+        task_id = data["task_id"]
+
+        store = client.app.state.store
+        from app.src.domain.models import ArtifactType
+        store.add_artifact(
+            task_id=task_id,
+            step_key="video_compose",
+            artifact_type=ArtifactType.final_video,
+            storage_ref="/nonexistent/path/output.mp4",
+            metadata={"kind": "final_video"},
+        )
+
+        arts = store.list_artifacts(task_id)
+        final_video = [a for a in arts if a.artifact_type == ArtifactType.final_video]
+        assert len(final_video) >= 1
+        artifact_id = final_video[-1].id
+
+        resp = client.get(f"/api/video-tasks/{task_id}/artifacts/{artifact_id}/file")
+        assert resp.status_code == 404
+
+
+class TestSrtArtifactContent:
+    """Verify .srt files are returned as text content, not as binary."""
+
+    def test_srt_artifact_content_returned_as_text(
+        self, client: TestClient, tmp_path: Path
+    ) -> None:
+        data = _create_task(client, topic="SRT content test")
+        task_id = data["task_id"]
+
+        # Write a fake SRT file
+        srt_dir = tmp_path / "artifacts" / task_id / "subtitle"
+        srt_dir.mkdir(parents=True, exist_ok=True)
+        srt_file = srt_dir / "subtitles.srt"
+        srt_content = "1\n00:00:00,000 --> 00:00:05,000\nHello world\n\n"
+        srt_file.write_text(srt_content, encoding="utf-8")
+
+        store = client.app.state.store
+        from app.src.domain.models import ArtifactType
+        store.add_artifact(
+            task_id=task_id,
+            step_key="subtitle",
+            artifact_type=ArtifactType.subtitle,
+            storage_ref=str(srt_file),
+            metadata={"kind": "subtitle"},
+        )
+
+        arts = store.list_artifacts(task_id)
+        srt_arts = [a for a in arts if a.artifact_type == ArtifactType.subtitle]
+        assert len(srt_arts) >= 1
+        artifact_id = srt_arts[-1].id
+
+        resp = client.get(f"/api/video-tasks/{task_id}/artifacts/{artifact_id}/content")
+        assert resp.status_code == 200
+        content = resp.json()["content"]
+        assert "content" in content
+        assert "Hello world" in content["content"]

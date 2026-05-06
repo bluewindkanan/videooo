@@ -1,0 +1,56 @@
+{
+  "task_id": "T006",
+  "red_command": "python3 -m pytest app/tests/unit/test_video_compose.py -x -q",
+  "red_exit_code": 1,
+  "red_failure_marker": "ModuleNotFoundError: No module named 'app.src.skills.video_compose'",
+  "green_command": "python3 -m pytest app/tests/unit/test_video_compose.py app/tests/unit/test_step_runner.py -x -q",
+  "green_exit_code": 0,
+  "verify_commands": [
+    "python3 -m pytest app/tests/unit/ -x -q"
+  ],
+  "files_under_test": [
+    "app/src/skills/video_compose.py",
+    "app/src/workers/step_runner.py"
+  ],
+  "files_changed": [
+    "app/src/skills/video_compose.py",
+    "app/src/workers/step_runner.py",
+    "app/tests/unit/test_video_compose.py"
+  ],
+  "tests": [
+    {
+      "name": "test_compose_normal_mode",
+      "description": "Normal mode with clips available uses FFmpeg concat demuxer, verifies args and result structure"
+    },
+    {
+      "name": "test_compose_fallback_mode",
+      "description": "Fallback mode uses lavfi color source, verifies no concat and correct result flags"
+    },
+    {
+      "name": "test_compose_ffmpeg_not_available",
+      "description": "Raises VideoComposeError when check_ffmpeg_available returns False"
+    },
+    {
+      "name": "test_compose_ffmpeg_fails",
+      "description": "Raises VideoComposeError when run_ffmpeg raises RuntimeError"
+    },
+    {
+      "name": "test_compose_output_written",
+      "description": "Verifies output.mp4 bytes are written via artifact_store.write_file"
+    },
+    {
+      "name": "test_compose_concat_file_built",
+      "description": "Verifies concat input file has correct format with file/inpoint/outpoint directives and clip paths"
+    },
+    {
+      "name": "test_step_runner_video_compose",
+      "description": "StepRunner._run_video_compose dispatch: read artifacts, call skill, register final_video + compose_log artifacts"
+    },
+    {
+      "name": "test_step_runner_video_compose_skill_registered",
+      "description": "Verify 'video_compose' is in STEP_SKILLS registry and maps to run_video_compose"
+    }
+  ],
+  "pre_existing_failures": [],
+  "recorded_at": "2026-05-05T20:00:00Z"
+}

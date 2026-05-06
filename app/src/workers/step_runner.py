@@ -11,6 +11,11 @@ from app.src.skills.material_fetch import MaterialFetchResult, run_material_fetc
 from app.src.skills.script_generation import run_script_generation
 from app.src.skills.storyboard import run_storyboard
 from app.src.skills.review_script import run_review_script
+from app.src.skills.voiceover import run_voiceover
+from app.src.skills.material_extract import run_material_extract
+from app.src.skills.material_match import run_material_match
+from app.src.skills.subtitle import run_subtitle
+from app.src.skills.video_compose import run_video_compose
 from app.src.storage.sqlite import SqliteStore
 
 
@@ -39,6 +44,11 @@ STEP_SKILLS: dict[str, Callable[..., object]] = {
     "script_generation": run_script_generation,
     "storyboard": run_storyboard,
     "review_script": run_review_script,
+    "voiceover": run_voiceover,
+    "material_extract": run_material_extract,
+    "material_match": run_material_match,
+    "subtitle": run_subtitle,
+    "video_compose": run_video_compose,
 }
 
 
@@ -117,6 +127,15 @@ class StepRunner:
             except MaterialFetchAllFailed:
                 # Step already marked failed + task set to waiting_for_material in _run_material_fetch
                 return True
+            except Exception as exc:
+                # Catch-all: mark step as failed so pipeline can continue
+                self.store.set_step_failed(
+                    task_id,
+                    step_key,
+                    error_category="skill_error",
+                    error_message=str(exc),
+                )
+                return True
 
             self.store.set_step_status(task_id, step_key, StepStatus.completed, progress_percent=100)
             return True
@@ -143,6 +162,21 @@ class StepRunner:
 
         if step_key == "review_script":
             return self._run_review_script(skill_fn, task_id=task_id, step_key=step_key, task=task)
+
+        if step_key == "voiceover":
+            return self._run_voiceover(skill_fn, task_id=task_id, step_key=step_key, task=task)
+
+        if step_key == "material_extract":
+            return self._run_material_extract(skill_fn, task_id=task_id, step_key=step_key, task=task)
+
+        if step_key == "material_match":
+            return self._run_material_match(skill_fn, task_id=task_id, step_key=step_key, task=task)
+
+        if step_key == "subtitle":
+            return self._run_subtitle(skill_fn, task_id=task_id, step_key=step_key, task=task)
+
+        if step_key == "video_compose":
+            return self._run_video_compose(skill_fn, task_id=task_id, step_key=step_key, task=task)
 
         result = skill_fn()
         return result
@@ -381,6 +415,267 @@ class StepRunner:
             task_id=task_id, step_key=step_key, artifact_type=ArtifactType.review,
             storage_ref=ref.storage_ref, metadata={"kind": "review_findings"},
         )
+        return result
+
+    def _run_voiceover(
+        self,
+        skill_fn: Callable[..., object],
+        *,
+        task_id: str,
+        step_key: str,
+        task: object,
+    ) -> dict:
+        """Run voiceover skill: read storyboard artifact, generate TTS audio, write artifacts."""
+        storyboard_segments = self._read_latest_artifact_payload(task_id, "storyboard", "parsed_json")
+        if storyboard_segments is None:
+            raise LLMError("storyboard_segments artifact not found", error_category="non_retryable")
+
+        result = skill_fn(
+            storyboard_segments=storyboard_segments,
+            artifact_store=self.artifacts,
+            task_id=task_id,
+        )
+
+        # Register per-segment audio files as audio artifacts
+        for seg in result["segments"]:
+            self.store.add_artifact(
+                task_id=task_id,
+                step_key=step_key,
+                artifact_type=ArtifactType.audio,
+                storage_ref=seg["segment_audio_ref"],
+                metadata={
+                    "kind": "segment_audio",
+                    "segment_index": seg["segment_index"],
+                    "duration_seconds": seg["duration_seconds"],
+                },
+            )
+
+        # Register full audio as audio artifact
+        self.store.add_artifact(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type=ArtifactType.audio,
+            storage_ref=result["full_audio_ref"],
+            metadata={"kind": "full_voiceover", "total_duration_seconds": result["total_duration_seconds"]},
+        )
+
+        # Write timing_data as parsed_json artifact
+        timing_ref = self.artifacts.write_json(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type="voiceover_timing",
+            payload=result,
+        )
+        self.store.add_artifact(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type=ArtifactType.parsed_json,
+            storage_ref=timing_ref.storage_ref,
+            metadata={"kind": "voiceover_timing"},
+        )
+
+        return result
+
+    def _run_material_extract(
+        self,
+        skill_fn: Callable[..., object],
+        *,
+        task_id: str,
+        step_key: str,
+        task: object,
+    ) -> dict:
+        """Run material_extract skill: read source_video artifacts, extract clips, write artifacts."""
+        # Collect source_video storage_refs from material_fetch step
+        artifacts = self.store.list_artifacts(task_id)
+        source_video_refs = [
+            a.storage_ref
+            for a in artifacts
+            if a.step_key == "material_fetch" and a.artifact_type == ArtifactType.source_video
+        ]
+
+        manifest = skill_fn(
+            source_video_refs=source_video_refs,
+            artifact_store=self.artifacts,
+            task_id=task_id,
+        )
+
+        # Register each clip as a clip artifact
+        for clip in manifest["clips"]:
+            self.store.add_artifact(
+                task_id=task_id,
+                step_key=step_key,
+                artifact_type=ArtifactType.clip,
+                storage_ref=clip["storage_ref"],
+                metadata={
+                    "kind": "clip",
+                    "clip_index": clip["clip_index"],
+                    "source_ref": clip["source_ref"],
+                    "start_seconds": clip["start_seconds"],
+                    "end_seconds": clip["end_seconds"],
+                    "duration_seconds": clip["duration_seconds"],
+                },
+            )
+
+        # Write clip_manifest as parsed_json artifact
+        manifest_ref = self.artifacts.write_json(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type="clip_manifest",
+            payload=manifest,
+        )
+        self.store.add_artifact(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type=ArtifactType.parsed_json,
+            storage_ref=manifest_ref.storage_ref,
+            metadata={"kind": "clip_manifest"},
+        )
+
+        return manifest
+
+    def _run_material_match(
+        self,
+        skill_fn: Callable[..., object],
+        *,
+        task_id: str,
+        step_key: str,
+        task: object,
+    ) -> dict:
+        """Run material_match skill: read voiceover_timing + clip_manifest, compute assignments."""
+        voiceover_timing = self._read_latest_artifact_payload(task_id, "voiceover", "parsed_json")
+        clip_manifest = self._read_latest_artifact_payload(task_id, "material_extract", "parsed_json")
+
+        result = skill_fn(
+            voiceover_timing=voiceover_timing or {"segments": []},
+            clip_manifest=clip_manifest or {"clips": []},
+        )
+
+        # Write matched_segments as parsed_json artifact
+        ref = self.artifacts.write_json(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type="matched_segments",
+            payload=result,
+        )
+        self.store.add_artifact(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type=ArtifactType.parsed_json,
+            storage_ref=ref.storage_ref,
+            metadata={"kind": "matched_segments"},
+        )
+
+        return result
+
+    def _run_subtitle(
+        self,
+        skill_fn: Callable[..., object],
+        *,
+        task_id: str,
+        step_key: str,
+        task: object,
+    ) -> dict:
+        """Run subtitle skill: read voiceover timing, generate SRT, write artifacts."""
+        voiceover_timing = self._read_latest_artifact_payload(task_id, "voiceover", "parsed_json")
+        if voiceover_timing is None:
+            raise LLMError("voiceover_timing artifact not found", error_category="non_retryable")
+
+        result = skill_fn(
+            voiceover_timing=voiceover_timing,
+            artifact_store=self.artifacts,
+            task_id=task_id,
+        )
+
+        # Register .srt file as subtitle artifact
+        self.store.add_artifact(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type=ArtifactType.subtitle,
+            storage_ref=result["srt_ref"],
+            metadata={
+                "kind": "subtitle",
+                "entry_count": result["entry_count"],
+                "total_duration_seconds": result["total_duration_seconds"],
+                "source": result["source"],
+            },
+        )
+
+        # Write subtitle_metadata as parsed_json artifact
+        metadata_ref = self.artifacts.write_json(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type="subtitle_metadata",
+            payload=result,
+        )
+        self.store.add_artifact(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type=ArtifactType.parsed_json,
+            storage_ref=metadata_ref.storage_ref,
+            metadata={"kind": "subtitle_metadata"},
+        )
+
+        return result
+
+    def _run_video_compose(
+        self,
+        skill_fn: Callable[..., object],
+        *,
+        task_id: str,
+        step_key: str,
+        task: object,
+    ) -> dict:
+        """Run video_compose skill: read matched_segments + voiceover + subtitle + clips, compose final video."""
+        matched_segments = self._read_latest_artifact_payload(task_id, "material_match", "parsed_json")
+        voiceover_timing = self._read_latest_artifact_payload(task_id, "voiceover", "parsed_json")
+        clip_manifest = self._read_latest_artifact_payload(task_id, "material_extract", "parsed_json")
+
+        # Get subtitle storage_ref path (the .srt file)
+        artifacts = self.store.list_artifacts(task_id)
+        subtitle_artifacts = [
+            a for a in artifacts
+            if a.step_key == "subtitle" and a.artifact_type == ArtifactType.subtitle
+        ]
+        subtitle_ref = subtitle_artifacts[-1].storage_ref if subtitle_artifacts else ""
+
+        result = skill_fn(
+            matched_segments=matched_segments or {"matches": [], "fallback_mode": True},
+            voiceover_timing=voiceover_timing or {"total_duration_seconds": 0, "full_audio_ref": ""},
+            subtitle_ref=subtitle_ref,
+            clip_manifest=clip_manifest or {"clips": []},
+            artifact_store=self.artifacts,
+            task_id=task_id,
+        )
+
+        # Register final_video artifact
+        self.store.add_artifact(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type=ArtifactType.final_video,
+            storage_ref=result["storage_ref"],
+            metadata={
+                "kind": "final_video",
+                "duration_seconds": result["duration_seconds"],
+                "resolution": result["resolution"],
+                "fallback_mode": result["fallback_mode"],
+            },
+        )
+
+        # Write compose_log as parsed_json artifact
+        log_ref = self.artifacts.write_json(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type="compose_log",
+            payload=result,
+        )
+        self.store.add_artifact(
+            task_id=task_id,
+            step_key=step_key,
+            artifact_type=ArtifactType.parsed_json,
+            storage_ref=log_ref.storage_ref,
+            metadata={"kind": "compose_log"},
+        )
+
         return result
 
     def _read_latest_artifact_payload(

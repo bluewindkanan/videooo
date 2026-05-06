@@ -1,0 +1,24 @@
+{
+  "task_id": "T001",
+  "red_command": "python3 -m pytest app/tests/unit/test_domain_models_004.py app/tests/unit/test_artifact_store_004.py app/tests/unit/test_ffmpeg_utils.py -x -q",
+  "red_exit_code": 1,
+  "red_failure_marker": "ModuleNotFoundError: No module named 'app.src.media.ffmpeg_utils'",
+  "green_command": "python3 -m pytest app/tests/unit/test_domain_models_004.py app/tests/unit/test_artifact_store_004.py app/tests/unit/test_ffmpeg_utils.py -x -q",
+  "green_exit_code": 0,
+  "verify_commands": ["python3 -m pytest app/tests/unit/ -x -q"],
+  "files_under_test": [
+    "app/src/domain/models.py",
+    "app/src/artifacts/store.py",
+    "app/src/media/ffmpeg_utils.py"
+  ],
+  "files_changed": [
+    "app/src/domain/models.py",
+    "app/src/artifacts/store.py",
+    "app/src/media/__init__.py",
+    "app/src/media/ffmpeg_utils.py",
+    "app/tests/unit/test_domain_models_004.py",
+    "app/tests/unit/test_artifact_store_004.py",
+    "app/tests/unit/test_ffmpeg_utils.py"
+  ],
+  "recorded_at": "2026-05-05T17:03:38Z"
+}

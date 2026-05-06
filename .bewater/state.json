@@ -4,31 +4,42 @@
   "current_state": "shipped",
   "previous_state": "building",
   "project": "视频自动化生产平台",
-  "current_feature": "003",
+  "current_feature": "004",
   "feature_context": {
-    "complexity_tier": "standard",
+    "complexity_tier": "deep",
     "implementation_mode": "extension",
-    "existing_implementation_note": "Feature 002 已交付 AI 编导管线（script_generation → storyboard → review_script）。source_links 作为 JSON 元数据存储但从未下载或使用。无上传 API、无二进制文件存储、无素材状态管理。需要新增 material_fetch step、上传 API、文件存储和 Web 素材交互。"
+    "existing_implementation_note": "Feature 002 已交付 LLM 编导管线（script_generation → storyboard → review_script），Feature 003 已交付素材双路径（material_fetch + upload）。StepRunner 已有 skill 注册和 _run_* 方法模式。无配音、切片、匹配、字幕、合成代码。"
   },
   "ready_for_build": true,
   "shipped_features": [],
   "initialized_at": "2026-05-05T05:53:47Z",
-  "specified_at": "2026-05-05T12:00:00Z",
-  "planned_at": "2026-05-05T12:20:00Z",
-  "building_at": "2026-05-05T12:25:00Z",
-  "shipped_at": "2026-05-05T13:30:00Z",
+  "specified_at": "2026-05-05T13:55:00Z",
+  "planned_at": "2026-05-05T14:45:00Z",
+  "building_at": "2026-05-05T14:50:00Z",
+  "shipped_at": "2026-05-05T15:50:00Z",
   "learned_at": null,
-  "internal_stage": null,
+  "internal_stage": "implementing",
   "artifacts": {
     "foundation_review_path": "docs/00-project/foundation-review.md",
-    "feature_path": "docs/01-features/003-material-dual-path/feature.md",
-    "feature_review_path": "docs/01-features/003-material-dual-path/feature-review.md",
-    "design_path": "docs/01-features/003-material-dual-path/design.md",
-    "tasks_path": "docs/01-features/003-material-dual-path/tasks.md",
-    "prebuild_review_path": "docs/01-features/003-material-dual-path/prebuild-review.md",
+    "feature_path": "docs/01-features/004-media-pipeline-core/feature.md",
+    "feature_review_path": "docs/01-features/004-media-pipeline-core/feature-review.md",
+    "design_path": "docs/01-features/004-media-pipeline-core/design.md",
+    "tasks_path": "docs/01-features/004-media-pipeline-core/tasks.md",
+    "prebuild_review_path": "docs/01-features/004-media-pipeline-core/prebuild-review.md",
+    "review_note_path": "docs/01-features/004-media-pipeline-core/review-note.md",
     "validation_evidence_index_path": null,
-    "tdd_receipts_dir": null,
-    "validation_report_path": "docs/01-features/003-material-dual-path/validation-report.md"
+    "tdd_receipts_dir": "docs/01-features/004-media-pipeline-core/receipts",
+    "validation_report_path": "docs/01-features/004-media-pipeline-core/validation-report.md"
+  },
+  "design_review": {
+    "status": "passed",
+    "reviewed_at": "2026-05-05T14:30:00Z",
+    "evidence_refs": ["docs/01-features/004-media-pipeline-core/design.md"],
+    "concerns": [
+      "FFmpeg 环境差异需在 build 阶段验证",
+      "edge-tts 异步调用需在 sync 管线中测试稳定性",
+      "中文烧录字幕字体依赖系统字体"
+    ]
   },
   "contract_schemas": {
     "state_schema_path": ".bewater/contracts/state.schema.json",
@@ -42,107 +53,28 @@
       "status": "passed",
       "freshness": {
         "status": "fresh",
-        "checked_at": "2026-05-05T12:00:00Z",
+        "checked_at": "2026-05-05T13:55:00Z",
         "stale_reasons": []
       },
       "concerns": [
-        "素材下载引入 HTTP 客户端依赖，已在 design.md 选型 httpx。",
-        "文件上传安全边界已在 design.md 给出方案。",
-        "waiting_for_material 状态已在 design.md 定义转换规则。",
-        "material_fetch 排在 script_generation 之前，素材失败会阻塞 LLM 调用。"
+        "FFmpeg 环境依赖需在 design.md 明确安装检测策略",
+        "同步管线 30-60s 耗时需在 Web 端给出等待提示",
+        "素材不足时的降级方案需在 design.md 给出具体方案",
+        "voiceover timing 精度直接影响字幕和匹配质量"
       ],
       "blockers": [],
-      "evaluated_at": "2026-05-05T12:00:00Z",
+      "evaluated_at": "2026-05-05T13:55:00Z",
       "evaluated_commit_sha": null,
       "input_digest": "",
       "produced_by": "goal-flow",
       "evidence_refs": [
-        "docs/01-features/003-material-dual-path/feature-review.md"
+        "docs/01-features/004-media-pipeline-core/feature-review.md"
       ],
       "input_refs": [
-        "docs/01-features/003-material-dual-path/feature.md"
+        "docs/01-features/004-media-pipeline-core/feature.md"
       ],
       "input_digests": {},
-      "updated_at": "2026-05-05T12:00:00Z"
-    },
-    "architect_gate": {
-      "status": "passed",
-      "freshness": {
-        "status": "fresh",
-        "checked_at": "2026-05-05T12:10:00Z",
-        "stale_reasons": []
-      },
-      "concerns": [
-        "httpx 需添加到 pyproject.toml",
-        "大文件下载建议使用流式写入",
-        "首版不设 waiting_for_material 超时"
-      ],
-      "blockers": [],
-      "evaluated_at": "2026-05-05T12:10:00Z",
-      "evaluated_commit_sha": null,
-      "input_digest": "",
-      "produced_by": "goal-flow",
-      "evidence_refs": [
-        "docs/01-features/003-material-dual-path/design.md"
-      ],
-      "input_refs": [
-        "docs/01-features/003-material-dual-path/feature.md",
-        "docs/00-project/architecture.md",
-        "docs/00-project/constitution.md"
-      ],
-      "input_digests": {},
-      "updated_at": "2026-05-05T12:10:00Z"
-    },
-    "tasks_gate": {
-      "status": "passed",
-      "freshness": {
-        "status": "fresh",
-        "checked_at": "2026-05-05T12:20:00Z",
-        "stale_reasons": []
-      },
-      "concerns": [],
-      "blockers": [],
-      "evaluated_at": "2026-05-05T12:20:00Z",
-      "evaluated_commit_sha": null,
-      "input_digest": "",
-      "produced_by": "plan-flow",
-      "evidence_refs": [
-        "docs/01-features/003-material-dual-path/tasks.md"
-      ],
-      "input_refs": [
-        "docs/01-features/003-material-dual-path/feature.md",
-        "docs/01-features/003-material-dual-path/design.md"
-      ],
-      "input_digests": {},
-      "updated_at": "2026-05-05T12:20:00Z"
-    },
-    "prebuild_review_gate": {
-      "status": "passed",
-      "freshness": {
-        "status": "fresh",
-        "checked_at": "2026-05-05T12:20:00Z",
-        "stale_reasons": []
-      },
-      "concerns": [
-        "T001/T002 parallel_group A: T002 需要 T001 的 write_file（测试可 mock，集成需顺序）",
-        "大文件下载使用流式写入需在实现时注意",
-        "httpx 依赖需在 T001 确认安装"
-      ],
-      "blockers": [],
-      "evaluated_at": "2026-05-05T12:20:00Z",
-      "evaluated_commit_sha": null,
-      "input_digest": "",
-      "produced_by": "plan-flow",
-      "evidence_refs": [
-        "docs/01-features/003-material-dual-path/prebuild-review.md"
-      ],
-      "input_refs": [
-        "docs/01-features/003-material-dual-path/feature.md",
-        "docs/01-features/003-material-dual-path/design.md",
-        "docs/01-features/003-material-dual-path/tasks.md"
-      ],
-      "input_digests": {},
-      "updated_at": "2026-05-05T12:20:00Z"
+      "updated_at": "2026-05-05T13:55:00Z"
     },
     "foundation_gate": {
       "status": "passed",
@@ -179,38 +111,77 @@
       },
       "updated_at": "2026-05-05T08:42:23Z"
     },
+    "tasks_gate": {
+      "status": "passed",
+      "freshness": {"status": "fresh", "checked_at": "2026-05-05T14:45:00Z", "stale_reasons": []},
+      "concerns": ["FFmpeg required for E2E; edge-tts external API dependency"],
+      "blockers": [],
+      "evaluated_at": "2026-05-05T14:45:00Z",
+      "produced_by": "plan-flow",
+      "evidence_refs": ["docs/01-features/004-media-pipeline-core/tasks.md"],
+      "input_refs": ["docs/01-features/004-media-pipeline-core/feature.md", "docs/01-features/004-media-pipeline-core/design.md"],
+      "updated_at": "2026-05-05T14:45:00Z"
+    },
+    "prebuild_review_gate": {
+      "status": "passed",
+      "freshness": {"status": "fresh", "checked_at": "2026-05-05T14:45:00Z", "stale_reasons": []},
+      "concerns": ["FFmpeg must be available for E2E; skip logic required for CI"],
+      "blockers": [],
+      "evaluated_at": "2026-05-05T14:45:00Z",
+      "produced_by": "plan-flow",
+      "evidence_refs": ["docs/01-features/004-media-pipeline-core/prebuild-review.md"],
+      "input_refs": ["docs/01-features/004-media-pipeline-core/feature.md", "docs/01-features/004-media-pipeline-core/design.md", "docs/01-features/004-media-pipeline-core/tasks.md"],
+      "updated_at": "2026-05-05T14:45:00Z"
+    },
+    "review_gate": {
+      "status": "passed",
+      "freshness": {"status": "fresh", "checked_at": "2026-05-05T15:30:00Z", "stale_reasons": []},
+      "concerns": ["2 E2E tests skipped due to FFmpeg libass limitation"],
+      "blockers": [],
+      "evaluated_at": "2026-05-05T15:30:00Z",
+      "produced_by": "build-flow",
+      "evidence_refs": ["docs/01-features/004-media-pipeline-core/review-note.md"],
+      "updated_at": "2026-05-05T15:30:00Z"
+    },
     "ship_precheck_gate": {
       "status": "go",
-      "blockers": [],
-      "updated_at": "2026-05-05T13:30:00Z",
       "evidence_checked": true,
-      "evaluated_at": "2026-05-05T13:30:00Z",
+      "freshness": {"status": "fresh", "checked_at": "2026-05-05T15:45:00Z", "stale_reasons": []},
+      "concerns": ["2 E2E tests skipped: FFmpeg libass not available"],
+      "blockers": [],
+      "evaluated_at": "2026-05-05T15:45:00Z",
       "produced_by": "ship-flow",
-      "evidence_refs": [
-        "docs/01-features/003-material-dual-path/validation-report.md",
-        "docs/01-features/003-material-dual-path/receipts.json",
-        "docs/01-features/003-material-dual-path/release-record.md"
-      ]
+      "evidence_refs": ["docs/01-features/004-media-pipeline-core/validation-report.md"],
+      "updated_at": "2026-05-05T15:45:00Z"
     }
   },
+  "state_history": [
+    {
+      "from": "planned",
+      "to": "building",
+      "command": "/bewater-build",
+      "at": "2026-05-05T14:50:00Z",
+      "evidence": "docs/01-features/004-media-pipeline-core/receipts/T001.json"
+    },
+    {
+      "from": "building",
+      "to": "shipped",
+      "command": "/bewater-ship",
+      "at": "2026-05-05T15:50:00Z",
+      "evidence": "docs/01-features/004-media-pipeline-core/release-record.md"
+    }
+  ],
   "runtime": {
     "active_flow": null,
     "subphase": null,
     "route_mode": "standard",
     "validation_outcome": {
-      "classification": "ready_for_precheck",
       "release_decision": "go",
-      "decider": "qa",
-      "consulted_roles": [
-        "reviewer"
-      ],
-      "evaluated_at": "2026-05-05T13:15:00Z",
-      "recommended_next_action": "/bewater-ship",
-      "evidence_refs": [
-        "docs/01-features/003-material-dual-path/validation-report.md",
-        "docs/01-features/003-material-dual-path/receipts.json"
-      ],
-      "blockers": []
+      "classification": "ready_for_precheck",
+      "tested_at": "2026-05-05T15:45:00Z",
+      "test_summary": "181 passed, 0 failed, 2 skipped",
+      "blockers": [],
+      "concerns": ["2 E2E tests skipped: FFmpeg libass not available"]
     },
     "retry_counters": {
       "auto_repeat_blockers": 0,
@@ -220,6 +191,20 @@
   },
   "compat": {},
   "state_history": [
+    {
+      "from": "specified",
+      "to": "planned",
+      "command": "/bewater-plan",
+      "at": "2026-05-05T14:45:00Z",
+      "evidence": "docs/01-features/004-media-pipeline-core/tasks.md"
+    },
+    {
+      "from": "shipped",
+      "to": "specified",
+      "command": "/bewater-goal",
+      "at": "2026-05-05T13:55:00Z",
+      "evidence": "docs/01-features/004-media-pipeline-core/feature.md"
+    },
     {
       "from": "building",
       "to": "shipped",

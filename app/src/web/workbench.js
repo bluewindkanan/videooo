@@ -373,6 +373,52 @@
       html += '<div class="artifact-loader" data-artifact-id="' + revArts[0].id + '" data-task-id="' + taskId + '" data-step="review_script" data-target="' + targetId3 + '" style="display:none;"></div>';
     }
 
+    // Final video section
+    var videoArts = (artifacts || []).filter(function (a) {
+      return a.artifact_type === "final_video";
+    });
+    if (videoArts.length > 0) {
+      var videoArtifactId = videoArts[videoArts.length - 1].id;
+      var fileUrl = "/api/video-tasks/" + taskId + "/artifacts/" + videoArtifactId + "/file";
+      html += '<h3 class="section-title">视频初稿</h3>';
+      html += '<div class="card">';
+      html += '<video class="video-player" controls preload="metadata">';
+      html += '<source src="' + escHtml(fileUrl) + '" type="video/mp4" />';
+      html += '您的浏览器不支持视频播放';
+      html += '</video>';
+      html += '<div class="video-actions">';
+      html += '<a href="' + escHtml(fileUrl) + '" download class="btn btn-primary">下载视频</a>';
+      html += '</div>';
+      html += '</div>';
+    }
+
+    // Audio section (voiceover)
+    var audioArts = (artifacts || []).filter(function (a) {
+      return a.artifact_type === "audio" && a.step_key === "voiceover";
+    });
+    if (audioArts.length > 0) {
+      var audioArtifactId = audioArts[audioArts.length - 1].id;
+      var audioUrl = "/api/video-tasks/" + taskId + "/artifacts/" + audioArtifactId + "/file";
+      html += '<h3 class="section-title">配音音频</h3>';
+      html += '<div class="card">';
+      html += '<audio class="audio-player" controls preload="metadata">';
+      html += '<source src="' + escHtml(audioUrl) + '" type="audio/mpeg" />';
+      html += '您的浏览器不支持音频播放';
+      html += '</audio>';
+      html += '</div>';
+    }
+
+    // Subtitle section
+    var srtArts = (artifacts || []).filter(function (a) {
+      return a.artifact_type === "subtitle";
+    });
+    if (srtArts.length > 0) {
+      var srtTargetId = "subtitle-content";
+      html += '<h3 class="section-title">字幕文件</h3>';
+      html += '<div class="card"><div id="' + srtTargetId + '">加载中...</div></div>';
+      html += '<div class="artifact-loader" data-artifact-id="' + srtArts[0].id + '" data-task-id="' + taskId + '" data-step="subtitle" data-target="' + srtTargetId + '" style="display:none;"></div>';
+    }
+
     return html;
   }
 
@@ -436,6 +482,14 @@
           );
         })
         .join("");
+    } else if (stepKey === "subtitle") {
+      // content is {"content": "1\n00:00:00,000 --> ..."}
+      var srtText = content.content || content;
+      if (typeof srtText === "string") {
+        el.innerHTML = '<pre style="white-space:pre-wrap;font-size:0.8rem;max-height:300px;overflow-y:auto;">' + escHtml(srtText) + '</pre>';
+      } else {
+        el.innerHTML = '<pre>' + escHtml(JSON.stringify(content, null, 2)) + '</pre>';
+      }
     } else {
       el.innerHTML = "<pre>" + escHtml(JSON.stringify(content, null, 2)) + "</pre>";
     }
